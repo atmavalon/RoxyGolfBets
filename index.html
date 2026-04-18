@@ -136,7 +136,7 @@
         <div class="logo-icon">⛳</div>
         <div>
           <div class="logo-text">Roxy Golf Bets</div>
-          <div class="logo-sub">Instant payouts from CSV</div>
+          <div class="logo-sub">Instant payouts from Squabbit</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -182,7 +182,7 @@
             </div>
             <div class="form-group">
               <label>Target Best Ball %</label>
-              <input type="number" id="s-bbpct" value="60" min="1" max="99" inputmode="decimal">
+              <input type="number" id="s-bbpct" value="70" min="1" max="99" inputmode="decimal">
             </div>
           </div>
           <div class="form-row">
@@ -220,8 +220,18 @@
         <div class="card-body">
           <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Open your scoring app CSV in any text editor, select all, copy, then paste below.</p>
           <textarea id="csv-input" placeholder="Paste CSV data here..."></textarea>
+          <div id="import-auth" style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px;margin-bottom:12px">
+            <div style="font-size:12px;color:#856404;font-weight:500;margin-bottom:8px">Enter password to import</div>
+            <div style="display:flex;gap:8px">
+              <input type="password" id="import-pw" placeholder="Password" 
+                style="flex:1;padding:8px 10px;border:1px solid #e0e0d8;border-radius:6px;font-size:14px"
+                onkeydown="if(event.key==='Enter')doImport()">
+              <button class="btn btn-primary" onclick="doImport()" style="min-width:80px">Go</button>
+            </div>
+            <div id="import-pw-error" style="color:#c0392b;font-size:11px;margin-top:6px;display:none">Incorrect password</div>
+          </div>
           <div class="btn-row">
-            <button class="btn btn-primary" style="flex:1" onclick="importCSV()">⚡ Calculate payouts</button>
+            <button class="btn btn-primary" style="flex:1" onclick="requestImport()">⚡ Calculate payouts</button>
             <button class="btn btn-secondary" onclick="clearImport()">Clear</button>
           </div>
           <div id="import-msg" style="margin-top:10px"></div>
@@ -299,7 +309,7 @@
 </div>
 
 <script>
-var cfg = {entry:40,bbPct:60,bbRound:10,skRound:5,lowNet:20,lowGross:20};
+var cfg = {entry:40,bbPct:70,bbRound:10,skRound:5,lowNet:20,lowGross:20};
 var lastResults = null;
 
 function loadSettings(){
@@ -680,6 +690,37 @@ function renderSkins(d){
 }
 
 loadSettings();
+</script>
+<script>
+var CALC_PW = 'roxy2026';
+var _importAuthed = false;
+
+function requestImport() {
+  // Check if already authed this session
+  try { if(sessionStorage.getItem('golf_auth')==='1') _importAuthed=true; } catch(e){}
+  if (_importAuthed) {
+    importCSV();
+  } else {
+    document.getElementById('import-auth').style.display = 'block';
+    setTimeout(function(){ document.getElementById('import-pw').focus(); }, 50);
+  }
+}
+
+function doImport() {
+  var pw = document.getElementById('import-pw').value;
+  if (pw === CALC_PW) {
+    _importAuthed = true;
+    try { sessionStorage.setItem('golf_auth','1'); } catch(e){}
+    document.getElementById('import-auth').style.display = 'none';
+    document.getElementById('import-pw').value = '';
+    document.getElementById('import-pw-error').style.display = 'none';
+    importCSV();
+  } else {
+    document.getElementById('import-pw-error').style.display = 'block';
+    document.getElementById('import-pw').value = '';
+    document.getElementById('import-pw').focus();
+  }
+}
 </script>
 </body>
 </html>
