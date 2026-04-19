@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a472a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Roxy Golf">
+<title>Roxy Golf Bets — Round Results</title>
+<style>
+:root{--green:#1a472a;--green-mid:#2d6a4f;--green-light:#e8f5e9;--green-acc:#52b788;--gold:#f4a228;--bg:#f5f5f0;--surface:#fff;--border:#e0e0d8;--text:#1a1a18;--muted:#666660;--radius:12px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--green);color:white;padding:14px 16px}
+.hdr{max-width:860px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{font-size:19px;font-weight:700;letter-spacing:-0.3px}
+.logo-sub{font-size:11px;opacity:0.7;margin-top:2px}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.nav a{font-size:12px;color:rgba(255,255,255,0.85);text-decoration:none;border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 11px;white-space:nowrap;touch-action:manipulation}
+.nav a:hover{background:rgba(255,255,255,0.12)}
+main{max-width:860px;margin:0 auto;padding:16px}
+.round-meta{font-size:13px;color:var(--muted);margin-bottom:14px}
+.round-meta strong{color:var(--text)}
+.sec{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;padding:10px 14px;background:var(--green-light);border-bottom:1px solid var(--border)}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:14px;overflow:hidden}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.metric{background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);padding:11px;text-align:center}
+.metric-val{font-size:20px;font-weight:700;color:var(--green)}
+.metric-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;font-weight:600;color:var(--muted);padding:7px 12px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.4px}
+th.r,td.r{text-align:right}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.b-gold{background:#fff3cd;color:#856404}.b-silver{background:#f0f0f0;color:#555}
+.b-bronze{background:#fde8d8;color:#8b4000}.b-blue{background:#e3f2fd;color:#1565c0}
+.b-green{background:var(--green-light);color:var(--green)}
+.pos{color:#2e7d32;font-weight:700}.neg{color:#c0392b}
+.eagle-c{background:#C0DD97;color:#173404;font-weight:700;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:10px}
+.birdie-c{background:#EAF3DE;color:#27500A;font-weight:600;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:10px}
+.bogey-c{color:#A32D2D}.double-c{color:#A32D2D;font-weight:700}
+.hole-lbl{font-size:11px;font-weight:600;color:var(--muted);margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.4px}
+.hole-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:4px}
+.hcell{background:var(--bg);border-radius:6px;padding:6px 2px;text-align:center;border:1px solid var(--border)}
+.hcell.won{background:var(--green-light);border-color:var(--green-acc)}
+.hnum{font-size:10px;color:var(--muted);display:block}
+.hwn{font-size:9px;font-weight:600;color:var(--green);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 1px}
+.hsc{font-size:9px;color:var(--green-mid);display:block}
+.hem{font-size:9px;color:var(--border);display:block}
+.team-hdr{background:var(--green);color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.tnm{font-size:14px;font-weight:700}
+.tsc{font-size:12px;opacity:0.85}
+.pdot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:10px;font-weight:700;margin-right:7px;flex-shrink:0}
+.d1{background:#FAEEDA;color:#633806}.d2{background:#F1EFE8;color:#444441}
+.d3{background:#FAECE7;color:#712B13}.d4,.d5,.d6,.d7,.d8{background:rgba(255,255,255,0.2);color:white}
+.ppill{font-size:10px;background:rgba(255,255,255,0.18);padding:2px 7px;border-radius:10px;margin-left:6px}
+.scr{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sct{width:100%;border-collapse:collapse;font-size:11px;min-width:580px}
+.sct th{padding:5px 3px;text-align:center;font-size:10px;font-weight:500;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border)}
+.sct th.pc{text-align:left;padding-left:8px;min-width:90px}
+.sct th.sub{background:#e8e8e0}
+.sct td{padding:7px 3px;text-align:center;border-bottom:1px solid var(--border)}
+.sct td.pc{text-align:left;padding-left:8px;font-weight:600;font-size:11px}
+.sct td.sub{background:#f0f0e8;font-weight:600;font-size:11px}
+.sct td.bbc{background:var(--green-light);font-weight:700;color:var(--green);font-size:11px}
+.swipe{font-size:10px;color:var(--muted);text-align:center;padding:4px;background:var(--bg);border-top:1px solid var(--border);display:none}
+.legrow{display:flex;gap:12px;padding:9px 14px;background:var(--bg);border-top:1px solid var(--border);flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.ldot{width:15px;height:15px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700}
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.ei{font-size:36px;margin-bottom:10px}
+.sc-title{font-size:16px;font-weight:500;color:var(--green);margin:18px 0 10px}
+@media(max-width:600px){
+  th,td{padding:8px 8px;font-size:12px}
+  .metrics{gap:6px}.metric-val{font-size:17px}
+  main{padding:12px}.swipe{display:block}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr">
+    <div><div class="logo">⛳ Roxy Golf Bets</div><div class="logo-sub">Round results</div></div>
+    <nav class="nav">
+      <a href="standings.html">Standings</a>
+      <a href="calculator.html">Calculator</a>
+    </nav>
+  </div>
+</header>
+<main><div id="pg"><div class="empty"><div class="ei">⛳</div>Loading...</div></div></main>
+<script>
+var URL2='https://script.google.com/macros/s/AKfycbwC87X466efJ4c3YYfqGj8rEEzaDfNOCg7v1h_UKe2p6Yjb9jmhlqSfoomq8Gkmll4kAQ/exec';
+var SEASON='2026';
+var PAR=[4,4,5,3,5,4,3,4,4,4,5,3,4,4,4,5,3,4];
+var FP=36,BP=36;
+
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+function sign(n){return n>=0?'+$'+Math.round(n).toLocaleString():'-$'+Math.abs(Math.round(n)).toLocaleString();}
+function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function scCol(s){return s<0?'color:#27500A;font-weight:500':s>0?'color:#A32D2D':'color:var(--muted)';}
+function gFmt(g,i){
+  var d=g-PAR[i];
+  if(d<=-2)return '<span class="eagle-c">'+g+'</span>';
+  if(d===-1)return '<span class="birdie-c">'+g+'</span>';
+  if(d===1)return '<span class="bogey-c">'+g+'</span>';
+  if(d>=2)return '<span class="double-c">'+g+'</span>';
+  return ''+g;
+}
+function dots(hdcp,si){
+  if(hdcp>=si+18)return '<span style="color:#1a472a;font-size:7px;vertical-align:super">&#9679;&#9679;</span>';
+  if(hdcp>=si)return '<span style="color:#1a472a;font-size:7px;vertical-align:super">&#9679;</span>';
+  return '';
+}
+function sDiff(v,p){var d=v-p;return ' <span style="font-size:9px;'+scCol(d)+'">'+(d>0?'+':'')+d+'</span>';}
+
+function render(d){
+  var h='';
+  var sc=d.scorecard;
+
+  h+='<div class="round-meta">Round: <strong>'+d.date+'</strong>';
+  if(d.timestamp)h+=' &nbsp;·&nbsp; '+d.timestamp;
+  h+='</div>';
+
+  h+='<div class="metrics">';
+  h+='<div class="metric"><div class="metric-val">'+d.players+'</div><div class="metric-lbl">golfers</div></div>';
+  h+='<div class="metric"><div class="metric-val">'+fmt(d.totalPot||0)+'</div><div class="metric-lbl">total pot</div></div>';
+  h+='<div class="metric"><div class="metric-val">'+fmt(d.serverRem||0)+'</div><div class="metric-lbl">server tip</div></div>';
+  h+='</div>';
+
+  // Blind draw
+  if(d.bbPayouts){var bd=d.bbPayouts.find(function(b){return b.isBlind;});if(bd)h+='<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:9px 13px;font-size:12px;color:#856404;margin-bottom:12px">Blind draw: '+bd.p1+' finished '+ord(bd.place)+' — partner share added to skins pot.</div>';}
+
+  // BB
+  if(d.bbPayouts&&d.bbPayouts.length){
+    var bg=['b-gold','b-silver','b-bronze','b-blue','b-blue','b-blue','b-blue','b-blue'];
+    var bbPct = d.prizePool ? Math.round(d.bbPot/d.prizePool*100) : 0;
+    var skPct = 100 - bbPct;
+    var splitNote = d.bbPot ? ' &nbsp;·&nbsp; ' + fmt(d.bbPot) + ' BB (' + bbPct + '%) / ' + fmt(d.skPot) + ' skins (' + skPct + '%)' : '';
+    h+='<div class="card"><div class="sec" style="display:flex;justify-content:space-between;align-items:center"><span>Best Ball — '+d.numPayouts+' places paid</span><span style="font-size:10px;font-weight:400;color:var(--green-mid)">'+splitNote+'</span></div><table><tr><th></th><th>Team</th><th class="r">Score</th><th class="r">Each</th></tr>';
+    d.bbPayouts.forEach(function(b,i){
+      var nm=b.p1+(b.isBlind?' (blind draw)':b.p2?' &amp; '+b.p2:'');
+      h+='<tr><td><span class="badge '+bg[i]+'">'+ord(b.place)+'</span></td><td>'+nm+'</td><td class="r" style="font-family:monospace">'+(b.score>0?'+':'')+b.score+'</td><td class="r" style="font-weight:700">'+fmt(b.perPlayer)+'</td></tr>';
+    });
+    h+='</table></div>';
+  }
+
+  // Skins
+  h+='<div class="card"><div class="sec">Skins</div><div style="padding:12px 14px">';
+  if(d.skinWinners&&d.skinWinners.length){
+    h+='<table style="margin-bottom:14px"><tr><th>Player</th><th class="r">Skins</th><th class="r">Payout</th></tr>';
+    d.skinWinners.forEach(function(s){
+      var res=d.results?d.results.find(function(r){return r.name===s.name;}):null;
+      h+='<tr><td style="font-weight:600">'+s.name+'</td><td class="r">'+s.count+'</td><td class="r" style="font-weight:700">'+fmt(res?res.skins:0)+'</td></tr>';
+    });
+    h+='</table>';
+  }
+
+  // Hole grid
+  if(sc&&sc.teams&&sc.si){
+    var skinNames={};
+    if(d.skinWinners)d.skinWinners.forEach(function(s){skinNames[s.name]=true;});
+    var playerH={};
+    sc.teams.forEach(function(t){t.players.forEach(function(p){if(p.gross&&p.gross.length===18)playerH[p.name]={gross:p.gross,hdcp:p.hdcp||0};});});
+    var hRes=[];
+    for(var hi=0;hi<18;hi++){
+      var best=999,wins=[];
+      for(var nm in playerH){
+        var pd=playerH[nm];
+        var str=(pd.hdcp>=sc.si[hi]+18)?2:(pd.hdcp>=sc.si[hi])?1:0;
+        var net=pd.gross[hi]-str;
+        if(net<best){best=net;wins=[{name:nm,gross:pd.gross[hi]}];}
+        else if(net===best)wins.push({name:nm,gross:pd.gross[hi]});
+      }
+      hRes.push({hole:hi+1,winner:(wins.length===1&&skinNames[wins[0].name])?wins[0]:null});
+    }
+    ['Front 9','Back 9'].forEach(function(lbl,half){
+      h+='<div class="hole-lbl">'+lbl+'</div><div class="hole-grid">';
+      for(var i=half*9;i<half*9+9;i++){
+        var hr=hRes[i];
+        h+='<div class="hcell'+(hr.winner?' won':'')+'"><span class="hnum">'+(i+1)+'</span>';
+        if(hr.winner){h+='<span class="hwn">'+hr.winner.name.split(' ').pop()+'</span><span class="hsc">'+hr.winner.gross+'</span>';}
+        else h+='<span class="hem">—</span>';
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+  }
+  h+='</div></div>';
+
+  // Side awards
+  if(d.lnWinner||d.lgWinner){
+    h+='<div class="card"><div class="sec">Side awards</div><table><tr><th>Award</th><th>Winner</th><th class="r">Score</th><th class="r">Payout</th></tr>';
+    if(d.lnWinner)h+='<tr><td><span class="badge b-green">Low Net</span></td><td>'+d.lnWinner.name+'</td><td class="r" style="font-family:monospace">'+(d.lnWinner.score>0?'+':'')+d.lnWinner.score+'</td><td class="r" style="font-weight:700">$20</td></tr>';
+    if(d.lgWinner)h+='<tr><td><span class="badge b-blue">Low Gross</span></td><td>'+d.lgWinner.name+'</td><td class="r" style="font-family:monospace">'+(d.lgWinner.score>0?'+':'')+d.lgWinner.score+'</td><td class="r" style="font-weight:700">$20</td></tr>';
+    h+='</table></div>';
+  }
+
+  // Payout summary
+  if(d.results&&d.results.length){
+    h+='<div class="card"><div class="sec">Payout summary</div><table><tr><th>Player</th><th class="r">BB</th><th class="r">Skins</th><th class="r">Side</th><th class="r">Collects</th><th class="r">Net</th></tr>';
+    d.results.forEach(function(r){
+      var net=r.collects-r.entry;
+      h+='<tr><td style="font-weight:600">'+r.name+'</td><td class="r">'+(r.bb?fmt(r.bb):'-')+'</td><td class="r">'+(r.skins?fmt(r.skins):'-')+'</td><td class="r">'+(r.side?fmt(r.side):'-')+'</td><td class="r" style="font-weight:700">'+fmt(r.collects)+'</td><td class="r"><span class="'+(net>=0?'pos':'neg')+'">'+sign(net)+'</span></td></tr>';
+    });
+    h+='</table></div>';
+  }
+
+  // Scorecards
+  if(sc&&sc.teams&&sc.teams.length){
+    h+='<div class="sc-title">Team scorecards</div>';
+    var dcls=['d1','d2','d3','d4','d5','d4','d4','d4'];
+    var plbls=['1st','2nd','3rd','4th','5th','6th','7th','8th'];
+    var pars=PAR.slice(0,9).concat([36]).concat(PAR.slice(9)).concat([36,72]);
+
+    sc.teams.forEach(function(team,ti){
+      var paid=ti<sc.numPayouts;
+      var scStr=team.score===0?'E':(team.score>0?'+'+team.score:''+team.score);
+      h+='<div class="card" style="margin-bottom:12px">';
+      h+='<div class="team-hdr"><div style="display:flex;align-items:center"><span class="pdot '+dcls[ti]+'">'+plbls[ti]+'</span><span class="tnm">'+team.name+'</span>'+(paid?'<span class="ppill">Paid</span>':'')+'</div><span class="tsc">BB: '+scStr+'</span></div>';
+      h+='<div class="scr"><table class="sct"><thead><tr><th class="pc">Player</th>';
+      [1,2,3,4,5,6,7,8,9,'Out',10,11,12,13,14,15,16,17,18,'In','Tot'].forEach(function(n){var sub=(n==='Out'||n==='In'||n==='Tot');h+='<th'+(sub?' class="sub"':'')+'>'+n+'</th>';});
+      h+='</tr>';
+      if(sc.si&&sc.si.length){
+        h+='<tr><td class="pc" style="color:var(--muted);font-size:9px;font-style:italic">S.I.</td>';
+        sc.si.slice(0,9).forEach(function(s){h+='<td style="color:var(--muted);font-size:9px;font-style:italic">'+s+'</td>';});
+        h+='<td class="sub"></td>';
+        sc.si.slice(9).forEach(function(s){h+='<td style="color:var(--muted);font-size:9px;font-style:italic">'+s+'</td>';});
+        h+='<td class="sub"></td><td class="sub"></td></tr>';
+      }
+      h+='<tr><td class="pc" style="color:var(--muted);font-size:10px;font-weight:500">Par</td>';
+      pars.forEach(function(p,i){var sub=(i===9||i===19||i===20);h+='<td'+(sub?' class="sub"':'')+' style="color:var(--muted);font-size:10px">'+p+'</td>';});
+      h+='</tr></thead><tbody>';
+
+      team.players.forEach(function(pl){
+        if(!pl.gross||pl.gross.length!==18)return;
+        var gr=pl.gross,ph=pl.hdcp||0;
+        var fr=gr.slice(0,9).reduce(function(a,b){return a+b;},0);
+        var bk=gr.slice(9).reduce(function(a,b){return a+b;},0);
+        var tot=fr+bk;
+        h+='<tr><td class="pc">'+pl.name+' <span style="font-size:9px;color:var(--muted)">'+(ph>0?'+':'')+ph+'</span></td>';
+        gr.slice(0,9).forEach(function(s,i){h+='<td>'+gFmt(s,i)+(sc.si?dots(ph,sc.si[i]):'')+'</td>';});
+        h+='<td class="sub">'+fr+sDiff(fr,FP)+'</td>';
+        gr.slice(9).forEach(function(s,i){h+='<td>'+gFmt(s,i+9)+(sc.si?dots(ph,sc.si[i+9]):'')+'</td>';});
+        h+='<td class="sub">'+bk+sDiff(bk,BP)+'</td>';
+        h+='<td class="sub" style="font-size:12px">'+tot+sDiff(tot,72)+'</td></tr>';
+      });
+
+      if(team.bbHoles&&team.bbHoles.length===18){
+        var bg=team.bbHoles.map(function(s,i){return PAR[i]+s;});
+        var bf=bg.slice(0,9).reduce(function(a,b){return a+b;},0);
+        var bb2=bg.slice(9).reduce(function(a,b){return a+b;},0);
+        var bt=bf+bb2;
+        h+='<tr style="border-top:2px solid var(--green-acc)"><td class="pc" style="color:var(--green);font-size:10px;font-weight:700">Best Ball</td>';
+        bg.slice(0,9).forEach(function(s,i){h+='<td class="bbc">'+gFmt(s,i)+'</td>';});
+        h+='<td class="bbc">'+bf+sDiff(bf,FP)+'</td>';
+        bg.slice(9).forEach(function(s,i){h+='<td class="bbc">'+gFmt(s,i+9)+'</td>';});
+        h+='<td class="bbc">'+bb2+sDiff(bb2,BP)+'</td>';
+        h+='<td class="bbc" style="font-size:12px">'+bt+sDiff(bt,72)+'</td></tr>';
+      }
+
+      h+='</tbody></table></div>';
+      h+='<div class="swipe">← Swipe to see all 18 holes →</div>';
+      h+='<div class="legrow"><div class="leg"><span class="ldot" style="background:#C0DD97;color:#173404">E</span>Eagle</div><div class="leg"><span class="ldot" style="background:#EAF3DE;color:#27500A">B</span>Birdie</div><div class="leg" style="color:#A32D2D">● Bogey+</div><div class="leg"><span style="color:#1a472a;font-size:10px">&#9679;</span>1 stroke &nbsp;<span style="color:#1a472a;font-size:10px">&#9679;&#9679;</span>2 strokes</div></div>';
+      h+='</div>';
+    });
+  }
+
+  document.getElementById('pg').innerHTML=h;
+}
+
+fetch(URL2+'?action=getData&season='+SEASON+'&v='+Date.now())
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(!data.latest){document.getElementById('pg').innerHTML='<div class="empty"><div class="ei">⛳</div><div style="font-weight:600;margin-bottom:6px">No results yet</div><div>Import a round using the calculator to see results here.</div></div>';return;}
+    render(data.latest);
+  })
+  .catch(function(){document.getElementById('pg').innerHTML='<div class="empty"><div class="ei">⛳</div><div style="font-weight:600">Could not load results</div><div>Check your connection and try again.</div></div>';});
+</script>
+</body>
+</html>
