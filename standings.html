@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a472a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Roxy Golf">
 <title>Roxy Golf Bets — 2026 Season</title>
 <style>
   :root {
@@ -102,7 +105,17 @@
     th.hide-sm, td.hide-sm { display: none; }
     .season-stats { gap: 16px; }
     nav { overflow-x: auto; }
+    main { padding: 12px; }
+    .season-year { font-size: 22px; }
+    .season-stat-val { font-size: 18px; }
+    th, td { padding: 8px 8px; font-size: 12px; }
+    .player-name { font-size: 13px; }
+    .avatar { width: 28px; height: 28px; font-size: 11px; }
+    .round-header { padding: 10px 12px; }
   }
+  button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  input { font-size: 16px; }
+  .nav-inner { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Avatar colors cycling */
   .av0{background:#EAF3DE;color:#27500A}.av1{background:#E6F1FB;color:#0C447C}
@@ -131,7 +144,10 @@
       <button class="nav-tab" onclick="showTab('skins',this)">Skins</button>
       <button class="nav-tab" onclick="showTab('rounds',this)">Rounds</button>
     </div>
-    <a class="nav-calc" href="index.html">⛳ Calculator</a>
+    <div style="display:flex;gap:6px;padding:4px 12px">
+      <a class="nav-calc" href="scorecard.html">Scorecards</a>
+      <a class="nav-calc" href="index.html">⛳ Calculator</a>
+    </div>
   </div>
 </nav>
 
