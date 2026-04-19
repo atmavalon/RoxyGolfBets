@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a472a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Roxy Golf">
+<title>Roxy Golf Bets — Results</title>
+<style>
+  :root {
+    --green: #1a472a; --green-mid: #2d6a4f; --green-light: #e8f5e9;
+    --green-acc: #52b788; --gold: #f4a228; --bg: #f5f5f0;
+    --surface: #ffffff; --border: #e0e0d8; --text: #1a1a18; --muted: #666660;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system,'SF Pro Text','Helvetica Neue',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header { background:var(--green); color:white; padding:16px 20px; }
+  .header-inner { max-width:900px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .logo { font-size:20px; font-weight:700; }
+  .logo-sub { font-size:12px; opacity:0.7; margin-top:2px; }
+  .nav-links { display:flex; gap:8px; flex-wrap:wrap; }
+  .nav-link { font-size:12px; color:rgba(255,255,255,0.8); text-decoration:none; border:1px solid rgba(255,255,255,0.3); border-radius:6px; padding:5px 12px; white-space:nowrap; }
+  .nav-link:hover { background:rgba(255,255,255,0.1); }
+  main { max-width:900px; margin:0 auto; padding:20px; }
+  .card { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); margin-bottom:14px; overflow:hidden; }
+  .card-header { padding:10px 16px; background:var(--green-light); border-bottom:1px solid var(--border); font-size:12px; font-weight:600; color:var(--green); text-transform:uppercase; letter-spacing:0.4px; display:flex; justify-content:space-between; align-items:center; }
+  .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .metric { background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--border); padding:12px; text-align:center; }
+  .metric-val { font-size:20px; font-weight:700; color:var(--green); }
+  .metric-lbl { font-size:10px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-size:11px; font-weight:600; color:var(--muted); padding:8px 12px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:0.4px; }
+  th.num,td.num { text-align:right; }
+  td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--bg); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+  .b-gold { background:#fff3cd; color:#856404; }
+  .b-silver { background:#f0f0f0; color:#555; }
+  .b-bronze { background:#fde8d8; color:#8b4000; }
+  .b-blue { background:#e3f2fd; color:#1565c0; }
+  .b-green { background:var(--green-light); color:var(--green); }
+  .pos { color:#2e7d32; font-weight:700; }
+  .neg { color:#c0392b; }
+  .alert { padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:14px; }
+  .alert-warn { background:#fff3cd; color:#856404; border:1px solid #ffe082; }
+  .alert-info { background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb; }
+  .round-date { font-size:13px; color:var(--muted); margin-bottom:16px; }
+  .empty { text-align:center; padding:48px 20px; color:var(--muted); }
+  .empty-icon { font-size:40px; margin-bottom:12px; }
+  .split-info { font-size:12px; color:var(--muted); margin-top:8px; padding:8px 12px; background:var(--bg); border-radius:var(--radius-sm); }
+  .blind-alert { background:#fff8e1; border:1px solid #ffe082; border-radius:var(--radius-sm); padding:10px 14px; font-size:12px; color:#856404; margin-bottom:12px; }
+  @media (max-width:600px) {
+    th,td { padding:8px 8px; font-size:12px; }
+    .metrics { grid-template-columns:repeat(3,1fr); gap:6px; }
+    .metric-val { font-size:17px; }
+    main { padding:12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="logo">⛳ Roxy Golf Bets</div>
+      <div class="logo-sub">Latest round results</div>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="standings.html">Season standings</a>
+      <a class="nav-link" href="results.html">Results</a>
+        <a class="nav-link" href="scorecard.html">Scorecards</a>
+      <a class="nav-link" href="index.html">Calculator</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="content">
+    <div class="empty">
+      <div class="empty-icon">⛳</div>
+      <div style="font-weight:600;margin-bottom:6px">Loading results...</div>
+    </div>
+  </div>
+</main>
+
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwC87X466efJ4c3YYfqGj8rEEzaDfNOCg7v1h_UKe2p6Yjb9jmhlqSfoomq8Gkmll4kAQ/exec';
+var SEASON = '2026';
+
+function fmt(n){ return '$' + Math.round(n).toLocaleString(); }
+function sign(n){ return n>=0?'+$'+Math.round(n).toLocaleString():'-$'+Math.abs(Math.round(n)).toLocaleString(); }
+function ordinal(n){ var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+
+function render(d) {
+  var h = '';
+
+  // Round date
+  h += '<div class="round-date">Round played: <strong>' + d.date + '</strong>';
+  if (d.timestamp) h += ' &nbsp;·&nbsp; Saved: ' + d.timestamp;
+  h += '</div>';
+
+  // Metrics
+  h += '<div class="metrics">';
+  h += '<div class="metric"><div class="metric-val">' + (d.players||0) + '</div><div class="metric-lbl">golfers</div></div>';
+  h += '<div class="metric"><div class="metric-val">' + fmt(d.totalPot||0) + '</div><div class="metric-lbl">total pot</div></div>';
+  h += '<div class="metric"><div class="metric-val">' + fmt(d.serverRem||0) + '</div><div class="metric-lbl">server tip</div></div>';
+  h += '</div>';
+
+  // Blind draw alert
+  if (d.bbPayouts) {
+    var bd = d.bbPayouts.find(function(b){return b.isBlind;});
+    if (bd) h += '<div class="blind-alert">Blind draw: ' + bd.p1 + ' finished ' + ordinal(bd.place) + ' place — partner share added to skins pot.</div>';
+  }
+
+  // BB Payouts
+  if (d.bbPayouts && d.bbPayouts.length) {
+    var badges = ['b-gold','b-silver','b-bronze','b-blue','b-blue','b-blue','b-blue','b-blue'];
+    h += '<div class="card"><div class="card-header"><span>Best Ball — ' + d.numPayouts + ' places paid</span></div>';
+    h += '<table><tr><th></th><th>Team</th><th class="num">Score</th><th class="num">Each</th></tr>';
+    d.bbPayouts.forEach(function(b,i){
+      var nm = b.p1 + (b.isBlind?' (blind draw)':b.p2?' &amp; '+b.p2:'');
+      h += '<tr><td><span class="badge ' + badges[i] + '">' + ordinal(b.place) + '</span></td>';
+      h += '<td>' + nm + '</td>';
+      h += '<td class="num" style="font-family:monospace">' + (b.score>0?'+':'')+b.score + '</td>';
+      h += '<td class="num" style="font-weight:700">' + fmt(b.perPlayer) + '</td></tr>';
+    });
+    h += '</table></div>';
+  }
+
+  // Skins
+  if (d.skinWinners && d.skinWinners.length) {
+    h += '<div class="card"><div class="card-header">Skins</div>';
+    h += '<table><tr><th>Player</th><th class="num">Skins</th><th class="num">Payout</th></tr>';
+    d.skinWinners.forEach(function(s){
+      // Need per-skin value - calculate from results
+      var skinPay = 0;
+      if (d.results) {
+        var r = d.results.find(function(r){return r.name===s.name;});
+        if (r && s.count>0) skinPay = Math.round(r.skins/s.count)*s.count;
+      }
+      h += '<tr><td>' + s.name + '</td><td class="num">' + s.count + '</td>';
+      h += '<td class="num" style="font-weight:700">' + fmt(r?r.skins:0) + '</td></tr>';
+    });
+    h += '</table></div>';
+  }
+
+  // Side awards
+  if (d.lnWinner || d.lgWinner) {
+    h += '<div class="card"><div class="card-header">Side awards</div>';
+    h += '<table><tr><th>Award</th><th>Winner</th><th class="num">Score</th><th class="num">Payout</th></tr>';
+    if (d.lnWinner) {
+      h += '<tr><td><span class="badge b-green">Low Net</span></td><td>' + d.lnWinner.name + '</td>';
+      h += '<td class="num" style="font-family:monospace">' + (d.lnWinner.score>0?'+':'')+d.lnWinner.score + '</td>';
+      h += '<td class="num" style="font-weight:700">$20</td></tr>';
+    }
+    if (d.lgWinner) {
+      h += '<tr><td><span class="badge b-blue">Low Gross</span></td><td>' + d.lgWinner.name + '</td>';
+      h += '<td class="num" style="font-family:monospace">' + (d.lgWinner.score>0?'+':'')+d.lgWinner.score + '</td>';
+      h += '<td class="num" style="font-weight:700">$20</td></tr>';
+    }
+    h += '</table></div>';
+  }
+
+  // Payout summary
+  if (d.results && d.results.length) {
+    h += '<div class="card"><div class="card-header">Payout summary</div>';
+    h += '<table><tr><th>Player</th><th class="num">BB</th><th class="num">Skins</th><th class="num">Side</th><th class="num">Collects</th><th class="num">Net</th></tr>';
+    d.results.forEach(function(r){
+      var net = r.collects - r.entry;
+      h += '<tr>';
+      h += '<td style="font-weight:600">' + r.name + '</td>';
+      h += '<td class="num">' + (r.bb?fmt(r.bb):'-') + '</td>';
+      h += '<td class="num">' + (r.skins?fmt(r.skins):'-') + '</td>';
+      h += '<td class="num">' + (r.side?fmt(r.side):'-') + '</td>';
+      h += '<td class="num" style="font-weight:700">' + fmt(r.collects) + '</td>';
+      h += '<td class="num"><span class="' + (net>=0?'pos':'neg') + '">' + sign(net) + '</span></td>';
+      h += '</tr>';
+    });
+    h += '</table></div>';
+  }
+
+  document.getElementById('content').innerHTML = h;
+}
+
+// Load data
+if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE') !== -1) {
+  document.getElementById('content').innerHTML =
+    '<div class="alert alert-warn">Apps Script URL not configured. Set APPS_SCRIPT_URL in results.html.</div>';
+} else {
+  fetch(APPS_SCRIPT_URL + '?action=getData&season=' + SEASON + '&v=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data.latest) {
+        document.getElementById('content').innerHTML =
+          '<div class="empty"><div class="empty-icon">⛳</div><div style="font-weight:600;margin-bottom:6px">No results yet</div><div>Import a round using the calculator to see results here.</div></div>';
+        return;
+      }
+      render(data.latest);
+    })
+    .catch(function(){
+      document.getElementById('content').innerHTML =
+        '<div class="alert alert-warn">Could not load results. Check your Apps Script URL.</div>';
+    });
+}
+</script>
+</body>
+</html>
