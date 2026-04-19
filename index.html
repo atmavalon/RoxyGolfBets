@@ -141,6 +141,7 @@
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <a class="standings-link" href="standings.html">Standings</a>
+        <a class="nav-link" href="results.html">Results</a>
         <a class="standings-link" href="scorecard.html">Scores</a>
         <div id="save-indicator" style="display:none">
           <span class="saved-tag">✓ Saved</span>
@@ -853,86 +854,110 @@ function renderTeams(d) {
 }
 </script>
 <script>
-var SEASON_KEY = 'golf_season_2026';
-
-function loadSeasonData() {
-  try { return JSON.parse(localStorage.getItem(SEASON_KEY) || 'null'); } catch(e) { return null; }
-}
-
-function saveSeasonData(data) {
-  try { localStorage.setItem(SEASON_KEY, JSON.stringify(data)); } catch(e) {}
-}
-
-function getOrCreateSeason() {
-  var s = loadSeasonData();
-  if (!s) s = { year: 2026, players: {}, rounds: [], updated: '' };
-  return s;
-}
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwC87X466efJ4c3YYfqGj8rEEzaDfNOCg7v1h_UKe2p6Yjb9jmhlqSfoomq8Gkmll4kAQ/exec';
+var SEASON = '2026';
 
 function saveToSeason() {
   if (!lastResults) return;
   var d = lastResults;
-  var season = getOrCreateSeason();
 
-  // Build round date from CSV title line if available, else today
+  var btn = document.querySelector('[onclick="saveToSeason()"]');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+
   var today = new Date();
-  var dateStr = today.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+  var dateStr = today.toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'});
 
-  // Check if this round already saved (same date + same players)
-  var roundKey = dateStr + '_' + d.players.length;
-  var alreadySaved = season.rounds.some(function(r){ return r.key === roundKey; });
-  if (alreadySaved) {
-    if (!confirm('A round from today is already saved. Replace it?')) return;
-    season.rounds = season.rounds.filter(function(r){ return r.key !== roundKey; });
-    // Reverse the player stats for that round
-    // (simpler: just recalculate from scratch from all remaining rounds)
-  }
-
-  // Update player stats
-  Object.keys(d.playerTotals).forEach(function(name) {
-    if (!season.players[name]) season.players[name] = { winnings:0, skins:0, rounds:0 };
-    var p = season.players[name];
-    var pt = d.playerTotals[name];
-    p.winnings += (pt.bb + pt.skins + pt.side);
-    p.skins    += (d.skins.find(function(s){ return s.name===name; }) || {count:0}).count;
-    p.rounds   += 1;
+  // Build scorecard data
+  var parsed2 = parseGrossScores(d._lines || []);
+  var playerBB2 = parseBestBallHoles(d._lines || []);
+  var scTeams = [];
+  var allTeams2 = d.bbPayouts.slice();
+  d.teams.slice(d.bbPayouts.length).forEach(function(t,i){
+    allTeams2.push({p1:t.p1,p2:t.p2,score:t.score,place:d.bbPayouts.length+i+1,perPlayer:0,isBlind:false});
+  });
+  allTeams2.forEach(function(team,ti){
+    var p1bb = playerBB2[team.p1]||[];
+    var p2bb = team.p2&&!team.isBlind?(playerBB2[team.p2]||[]):[];
+    var bbHoles = p1bb.length===18?p1bb.map(function(s,i){return p2bb.length?Math.min(s,p2bb[i]):s;}):[]; 
+    var players2=[];
+    [team.p1,team.isBlind?null:team.p2].forEach(function(name){
+      if(!name)return;
+      var gr=parsed2.scores[name];
+      var ph=parsed2.hdcps[name]||0;
+      if(gr)players2.push({name:name,hdcp:ph,gross:gr});
+    });
+    scTeams.push({
+      name:(team.p1||'')+(team.p2&&!team.isBlind?' / '+team.p2:''),
+      score:team.score, place:ti+1, bbHoles:bbHoles, players:players2
+    });
   });
 
-  // Build results list for round history
+  // Build results list
   var results = Object.keys(d.playerTotals).map(function(name){
     var pt = d.playerTotals[name];
+    var skinEntry = d.skins.find(function(s){return s.name===name;})||{count:0};
     return {
-      name: name,
-      bb:   Math.round(pt.bb),
-      skins: Math.round(pt.skins),
-      side:  Math.round(pt.side),
-      collects: Math.round(pt.bb + pt.skins + pt.side),
-      entry: d.cfg.entry
+      name:name, bb:Math.round(pt.bb), skins:Math.round(pt.skins),
+      side:Math.round(pt.side), collects:Math.round(pt.bb+pt.skins+pt.side),
+      entry:d.cfg.entry, skinCount:skinEntry.count
     };
-  }).sort(function(a,b){ return b.collects - a.collects; });
+  }).sort(function(a,b){return b.collects-a.collects;});
 
-  // Add round
-  season.rounds.push({
-    key:     roundKey,
-    date:    dateStr,
-    players: d.players.length,
-    skins:   d.totalSkins,
-    pot:     d.totalPot,
-    results: results
+  // Build BB payouts for results page
+  var bbPayoutsData = d.bbPayouts.map(function(b){
+    return {p1:b.p1,p2:b.p2,score:b.score,team:b.team,perPlayer:b.perPlayer,isBlind:b.isBlind,place:b.place};
   });
 
-  season.updated = today.toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
-  saveSeasonData(season);
+  var payload = {
+    action: 'saveRound',
+    season: SEASON,
+    date: dateStr,
+    players: d.players.length,
+    teams: d.teams.length,
+    totalSkins: d.totalSkins,
+    totalPot: d.totalPot,
+    serverRem: d.serverRem,
+    numPayouts: d.numPayouts,
+    bbPayouts: bbPayoutsData,
+    skinWinners: d.skins.filter(function(s){return s.count>0;}),
+    lnWinner: d.lnWinner,
+    lgWinner: d.lgWinner,
+    results: results,
+    scorecard: {
+      date: dateStr,
+      numPayouts: d.numPayouts,
+      si: parsed2.si,
+      teams: scTeams
+    }
+  };
 
-  // Download as season.json
-  var blob = new Blob([JSON.stringify(season, null, 2)], {type:'application/json'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'season.json';
-  a.click();
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE') !== -1) {
+    alert('Please set your Apps Script URL in index.html first.');
+    if (btn) { btn.textContent = 'Save to Season'; btn.disabled = false; }
+    return;
+  }
 
-  document.getElementById('save-season-bar').style.display = 'none';
-  alert('Season saved! Upload season.json to your GitHub repository to publish the standings.');
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(resp){
+    if (resp.success) {
+      document.getElementById('save-season-bar').style.display = 'none';
+      alert('Round saved! Standings and scorecard are now live for the group.');
+    } else {
+      alert('Error saving: ' + (resp.message||'Unknown error'));
+    }
+  })
+  .catch(function(err){
+    alert('Could not reach Google Sheets. Check your Apps Script URL.
+
+' + err);
+  })
+  .finally(function(){
+    if (btn) { btn.textContent = 'Save to Season'; btn.disabled = false; }
+  });
 }
 
 // Show save bar after import

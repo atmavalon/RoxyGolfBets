@@ -145,7 +145,8 @@
       <button class="nav-tab" onclick="showTab('rounds',this)">Rounds</button>
     </div>
     <div style="display:flex;gap:6px;padding:4px 12px">
-      <a class="nav-calc" href="scorecard.html">Scorecards</a>
+      <a class="nav-link" href="results.html">Results</a>
+        <a class="nav-calc" href="scorecard.html">Scorecards</a>
       <a class="nav-calc" href="index.html">⛳ Calculator</a>
     </div>
   </div>
@@ -192,11 +193,35 @@ function fmt(n){ return '$' + Math.round(n).toLocaleString(); }
 function sign(n){ return n>=0 ? '+$'+Math.round(n).toLocaleString() : '-$'+Math.abs(Math.round(n)).toLocaleString(); }
 function initials(name){ return name.split(' ').map(function(p){return p[0];}).join('').toUpperCase().slice(0,2); }
 
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwC87X466efJ4c3YYfqGj8rEEzaDfNOCg7v1h_UKe2p6Yjb9jmhlqSfoomq8Gkmll4kAQ/exec';
+var SEASON = '2026';
+
 function loadData() {
-  fetch('season.json?v=' + Date.now())
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE') !== -1) {
+    showEmpty('Set your Apps Script URL in standings.html to load data.');
+    return;
+  }
+  fetch(APPS_SCRIPT_URL + '?action=getData&season=' + SEASON + '&v=' + Date.now())
     .then(function(r){ return r.json(); })
-    .then(function(data){ seasonData = data; render(); })
-    .catch(function(){ showEmpty(); });
+    .then(function(data){
+      // Convert Google Sheets format to our render format
+      seasonData = {
+        year: SEASON,
+        updated: data.updated || '',
+        players: {},
+        rounds: data.rounds || []
+      };
+      (data.players || []).forEach(function(p){
+        seasonData.players[p.name] = {
+          winnings: p.winnings || 0,
+          skins: p.skins || 0,
+          rounds: p.rounds || 0,
+          net: p.net || 0
+        };
+      });
+      render();
+    })
+    .catch(function(e){ showEmpty('Could not load data: ' + e); });
 }
 
 function showEmpty() {
