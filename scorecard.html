@@ -122,6 +122,8 @@
     <div class="legend-item"><span class="leg-dot" style="background:#C0DD97;color:#173404">E</span> Eagle</div>
     <div class="legend-item"><span class="leg-dot" style="background:#EAF3DE;color:#27500A">B</span> Birdie</div>
     <div class="legend-item" style="color:#A32D2D">● Bogey / Double+</div>
+    <div class="legend-item"><span style="color:#1a472a;font-size:11px">&#9679;</span> 1 stroke</div>
+    <div class="legend-item"><span style="color:#1a472a;font-size:11px">&#9679;&#9679;</span> 2 strokes</div>
     <div class="legend-item" style="margin-left:auto;font-size:11px">BB = team Best Ball score on hole</div>
   </div>
 
@@ -199,6 +201,16 @@ function render(data) {
     });
     h += '</tr>';
 
+    // SI row
+    var si = data.si || [];
+    if (si.length) {
+      h += '<tr style="background:var(--bg)"><td class="player-col" style="color:var(--muted);font-weight:400;font-size:10px;font-style:italic">S.I.</td>';
+      si.slice(0,9).forEach(function(s){ h += '<td style="color:var(--muted);font-size:10px;text-align:center;font-style:italic">' + s + '</td>'; });
+      h += '<td class="sub"></td>';
+      si.slice(9).forEach(function(s){ h += '<td style="color:var(--muted);font-size:10px;text-align:center;font-style:italic">' + s + '</td>'; });
+      h += '<td class="sub"></td><td class="sub"></td></tr>';
+    }
+
     // Par row
     h += '<tr style="background:var(--bg)"><td class="player-col" style="color:var(--muted);font-weight:500;font-size:11px">Par</td>';
     var pars = PAR.slice(0,9).concat([FRONT_PAR]).concat(PAR.slice(9)).concat([BACK_PAR, TOTAL_PAR]);
@@ -211,17 +223,34 @@ function render(data) {
     // Player rows
     team.players.forEach(function(player){
       var gross = player.gross;
+      var hdcp  = player.hdcp || 0;
       var front = gross.slice(0,9).reduce(function(a,b){return a+b;},0);
       var back  = gross.slice(9).reduce(function(a,b){return a+b;},0);
       var total = front + back;
       var frontDiff = front - FRONT_PAR;
       var backDiff  = back - BACK_PAR;
       var totalDiff = total - TOTAL_PAR;
+      var si = data.si || [];
 
-      h += '<tr><td class="player-col">' + player.name + '</td>';
-      gross.slice(0,9).forEach(function(s,i){ h += '<td>' + renderScore(s,i) + '</td>'; });
+      function cellScore(s, holeIdx) {
+        var base = renderScore(s, holeIdx);
+        var dots = '';
+        if (si.length) {
+          var siVal = si[holeIdx];
+          if (hdcp >= siVal + 18) {
+            dots = '<span style="color:#1a472a;font-size:8px;vertical-align:super;margin-left:1px">&#9679;&#9679;</span>';
+          } else if (hdcp >= siVal) {
+            dots = '<span style="color:#1a472a;font-size:8px;vertical-align:super;margin-left:1px">&#9679;</span>';
+          }
+        }
+        return base + dots;
+      }
+
+      var hdcpStr = hdcp === 0 ? 'E' : (hdcp > 0 ? '+' + hdcp : '' + hdcp);
+      h += '<tr><td class="player-col">' + player.name + ' <span style="font-size:10px;color:var(--muted);font-weight:400">(' + hdcpStr + ')</span></td>';
+      gross.slice(0,9).forEach(function(s,i){ h += '<td>' + cellScore(s,i) + '</td>'; });
       h += '<td class="sub">' + front + ' <span style="font-size:10px;color:' + (frontDiff>0?'#A32D2D':frontDiff<0?'#27500A':'var(--muted)') + '">(' + (frontDiff>0?'+':'') + frontDiff + ')</span></td>';
-      gross.slice(9).forEach(function(s,i){ h += '<td>' + renderScore(s,i+9) + '</td>'; });
+      gross.slice(9).forEach(function(s,i){ h += '<td>' + cellScore(s,i+9) + '</td>'; });
       h += '<td class="sub">' + back + ' <span style="font-size:10px;color:' + (backDiff>0?'#A32D2D':backDiff<0?'#27500A':'var(--muted)') + '">(' + (backDiff>0?'+':'') + backDiff + ')</span></td>';
       h += '<td class="sub" style="font-size:13px">' + total + ' <span style="font-size:10px;color:' + (totalDiff>0?'#A32D2D':totalDiff<0?'#27500A':'var(--muted)') + '">(' + (totalDiff>0?'+':'') + totalDiff + ')</span></td>';
       h += '</tr>';
@@ -266,45 +295,46 @@ function render(data) {
 var roundData = {
   date: 'April 15, 2026',
   numPayouts: 3,
+  si: [15,1,9,13,17,3,11,7,5, 16,12,18,10,4,6,8,14,2],
   teams: [
     {
       name: 'McFadden / Nillas', score: -7,
       bbHoles: [0,-1,-1,0,0,-1,-1,0,-1, -1,0,0,-1,0,0,-1,0,1],
       players: [
-        {name:'John McFadden',  gross:[5,5,6,5,6,5,5,5,6, 4,7,5,5,5,5,5,4,7]},
-        {name:'Michael Nillas', gross:[5,5,5,4,7,6,3,5,4, 5,6,3,4,6,6,6,5,7]},
+        {name:'John McFadden',  hdcp:21, gross:[5,5,6,5,6,5,5,5,6, 4,7,5,5,5,5,5,4,7]},
+        {name:'Michael Nillas', hdcp:15, gross:[5,5,5,4,7,6,3,5,4, 5,6,3,4,6,6,6,5,7]},
       ]
     },
     {
       name: 'Goldman / Bricker', score: -6,
       bbHoles: [0,-1,0,0,0,-1,0,0,-1, -1,-1,-1,0,0,-1,0,1,0],
       players: [
-        {name:'Rich Goldman',  gross:[4,5,6,5,5,4,5,5,4, 5,8,3,5,5,4,6,4,5]},
-        {name:'Nick Bricker',  gross:[6,5,7,4,6,6,4,5,5, 4,5,3,5,5,4,7,5,6]},
+        {name:'Rich Goldman',  hdcp:11, gross:[4,5,6,5,5,4,5,5,4, 5,8,3,5,5,4,6,4,5]},
+        {name:'Nick Bricker',  hdcp:20, gross:[6,5,7,4,6,6,4,5,5, 4,5,3,5,5,4,7,5,6]},
       ]
     },
     {
       name: 'Hammell / Sweigart', score: -4,
       bbHoles: [1,-1,0,0,-1,0,1,1,-1, 0,-1,0,0,-1,-1,-1,1,-1],
       players: [
-        {name:'Dan Hammell',     gross:[5,4,6,4,4,6,4,6,6, 4,5,3,5,5,3,7,4,4]},
-        {name:'Robert Sweigart', gross:[5,6,6,4,5,5,5,6,4, 4,5,4,5,4,5,5,5,7]},
+        {name:'Dan Hammell',     hdcp:2,  gross:[5,4,6,4,4,6,4,6,6, 4,5,3,5,5,3,7,4,4]},
+        {name:'Robert Sweigart', hdcp:13, gross:[5,6,6,4,5,5,5,6,4, 4,5,4,5,4,5,5,5,7]},
       ]
     },
     {
       name: 'Loewen / Mairone', score: 2,
       bbHoles: [0,1,-1,2,-1,0,2,0,-1, 2,0,0,0,-1,-1,0,0,0],
       players: [
-        {name:'Robert Loewen', gross:[4,6,5,6,4,7,6,5,6, 7,6,4,5,4,6,6,4,6]},
-        {name:'Bob Mairone',   gross:[4,6,6,5,5,5,5,6,4, 6,5,3,4,5,4,7,5,5]},
+        {name:'Robert Loewen', hdcp:14, gross:[4,6,5,6,4,7,6,5,6, 7,6,4,5,4,6,6,4,6]},
+        {name:'Bob Mairone',   hdcp:7,  gross:[4,6,6,5,5,5,5,6,4, 6,5,3,4,5,4,7,5,5]},
       ]
     },
     {
       name: 'Marino / Hanley', score: 2,
       bbHoles: [1,-1,0,0,0,0,1,1,0, 0,-1,0,0,1,0,-2,0,2],
       players: [
-        {name:'Anthony Marino', gross:[5,4,6,4,5,5,5,6,5, 4,5,3,5,6,6,4,4,7]},
-        {name:'Brent Hanley',   gross:[7,7,7,6,7,7,6,6,4, 5,5,4,5,5,4,6,3,7]},
+        {name:'Anthony Marino', hdcp:13, gross:[5,4,6,4,5,5,5,6,5, 4,5,3,5,6,6,4,4,7]},
+        {name:'Brent Hanley',   hdcp:-2, gross:[7,7,7,6,7,7,6,6,4, 5,5,4,5,5,4,6,3,7]},
       ]
     },
   ]

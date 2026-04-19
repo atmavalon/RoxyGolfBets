@@ -950,24 +950,44 @@ var SC_PAR = [4,4,5,3,5,4,3,4,4, 4,5,3,4,4,4,5,3,4];
 
 function parseGrossScores(lines) {
   var scores = {};
+  var hdcps  = {};
+  var siRow  = [];
   var current = null;
+  var strokeSeen = {};
   for (var i = 0; i < lines.length; i++) {
     var parts = splitLine(lines[i]);
     var c0 = (parts[0]||'').trim(), c1 = (parts[1]||'').trim();
+    // S.I. row
+    if (c0 === 'S.I.' && parts.length > 10 && siRow.length === 0) {
+      for (var h=3; h<=11; h++) siRow.push(parseInt(parts[h])||0);
+      for (var h=13; h<=21; h++) siRow.push(parseInt(parts[h])||0);
+    }
     if (c0 && (c1==='White tee'||c1==='Gold tee'||c1==='Blue tee'||c1==='Red tee') && parts.length > 10) {
       current = c0;
       var gr = [];
       for (var h=3; h<=11; h++) gr.push(parseInt(parts[h])||0);
       for (var h=13; h<=21; h++) gr.push(parseInt(parts[h])||0);
       if (gr.length === 18) scores[current] = gr;
+      strokeSeen[current] = 0;
+    }
+    // First Stroke row = course handicap
+    if (!c0 && c1 === 'Stroke' && current && parts.length > 2) {
+      strokeSeen[current] = (strokeSeen[current]||0) + 1;
+      if (strokeSeen[current] === 1) {
+        var hdcpVal = parseFloat((parts[2]||'0').replace('+',''));
+        hdcps[current] = isNaN(hdcpVal) ? 0 : ((parts[2]||'').indexOf('+')===0 ? hdcpVal : hdcpVal);
+      }
     }
   }
-  return scores;
+  return {scores: scores, hdcps: hdcps, si: siRow};
 }
 
 function renderScorecard(d) {
   var lines = d._lines || [];
-  var grossScores = parseGrossScores(lines);
+  var parsed = parseGrossScores(lines);
+  var grossScores = parsed.scores;
+  var hdcps = parsed.hdcps;
+  var siArr = parsed.si;
   var playerBB = parseBestBallHoles(lines);
 
   var PLACE_LABELS = ['1st','2nd','3rd','4th','5th','6th','7th','8th'];
@@ -985,6 +1005,19 @@ function renderScorecard(d) {
 
   function fmtScore(gross, holeIdx) {
     return '<span style="' + scCls(gross, holeIdx) + '">' + gross + '</span>';
+  }
+  function cellScore(gross, holeIdx, hdcp) {
+    var base = fmtScore(gross, holeIdx);
+    var dots = '';
+    if (siArr.length) {
+      var si = siArr[holeIdx];
+      if (hdcp >= si + 18) {
+        dots = '<span style="color:#1a472a;font-size:8px;vertical-align:super;margin-left:1px">&#9679;&#9679;</span>';
+      } else if (hdcp >= si) {
+        dots = '<span style="color:#1a472a;font-size:8px;vertical-align:super;margin-left:1px">&#9679;</span>';
+      }
+    }
+    return base + dots;
   }
 
   function fmtDiff(diff) {
@@ -1054,10 +1087,12 @@ function renderScorecard(d) {
       var back  = gr.slice(9).reduce(function(a,b){return a+b;},0);
       var total = front + back;
 
-      h += '<tr><td style="text-align:left;padding:7px 8px;font-weight:600;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)">'+name+'</td>';
-      gr.slice(0,9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;border-bottom:0.5px solid var(--color-border-tertiary)">'+fmtScore(s,i)+'</td>'; });
+      var ph = hdcps[name] || 0;
+      var phStr = ph > 0 ? '+'+ph : ''+ph;
+      h += '<tr><td style="text-align:left;padding:7px 8px;font-weight:600;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)">'+name+' <span style="font-size:10px;color:var(--color-text-secondary);font-weight:400">('+phStr+')</span></td>';
+      gr.slice(0,9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;border-bottom:0.5px solid var(--color-border-tertiary)">'+cellScore(s,i,ph)+'</td>'; });
       h += '<td style="text-align:center;padding:5px 3px;background:#e8e8e0;font-weight:600;border-bottom:0.5px solid var(--color-border-tertiary)">'+front+fmtDiff(front-FRONT_PAR)+'</td>';
-      gr.slice(9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;border-bottom:0.5px solid var(--color-border-tertiary)">'+fmtScore(s,i+9)+'</td>'; });
+      gr.slice(9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;border-bottom:0.5px solid var(--color-border-tertiary)">'+cellScore(s,i+9,ph)+'</td>'; });
       h += '<td style="text-align:center;padding:5px 3px;background:#e8e8e0;font-weight:600;border-bottom:0.5px solid var(--color-border-tertiary)">'+back+fmtDiff(back-BACK_PAR)+'</td>';
       h += '<td style="text-align:center;padding:5px 3px;background:#e8e8e0;font-weight:700;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)">'+total+fmtDiff(total-72)+'</td>';
       h += '</tr>';
