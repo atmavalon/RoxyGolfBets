@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf Bets">
+<meta name="theme-color" content="#1a472a">
+<title>Roxy Golf Bets — Calculator</title>
+<style>
+  :root {
+    --green: #1a472a;
+    --green-mid: #2d6a4f;
+    --green-light: #e8f5e9;
+    --green-accent: #52b788;
+    --gold: #f4a228;
+    --silver: #9e9e9e;
+    --bronze: #cd7f32;
+    --red: #c0392b;
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --border: #e0e0d8;
+    --text: #1a1a18;
+    --text-muted: #666660;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: -apple-system, 'SF Pro Text', sans-serif; color: var(--text); font-size: 15px; }
+
+  /* App shell */
+  .app { display: flex; flex-direction: column; height: 100vh; max-width: 768px; margin: 0 auto; background: var(--bg); }
+
+  /* Header */
+  header { background: var(--green); color: white; padding: env(safe-area-inset-top, 12px) 16px 0; }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .logo-text { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; opacity: 0.7; }
+  .standings-link { font-size: 12px; color: rgba(255,255,255,0.8); text-decoration: none; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; }
+  .standings-link:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  /* Tab bar */
+  .tabs { display: flex; background: var(--green); border-top: 1px solid rgba(255,255,255,0.1); }
+  .tab { flex: 1; padding: 10px 4px 8px; text-align: center; font-size: 11px; color: rgba(255,255,255,0.6); cursor: pointer; border: none; background: none; transition: color 0.15s; position: relative; -webkit-tap-highlight-color: rgba(255,255,255,0.2); touch-action: manipulation; min-height: 44px; }
+  .tab.active { color: white; }
+  .tab.active::after { content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px; background: var(--gold); border-radius: 2px 2px 0 0; }
+  .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  /* Content */
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .panel { display: none; padding: 16px; padding-bottom: 32px; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
+  .card-header { padding: 12px 16px; background: var(--green-light); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--green); letter-spacing: 0.3px; text-transform: uppercase; }
+  .card-body { padding: 16px; }
+
+  /* Metrics row */
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .metric { background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 12px; text-align: center; }
+  .metric-val { font-size: 20px; font-weight: 700; color: var(--green); }
+  .metric-lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Form */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .form-group input { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 15px; background: var(--bg); color: var(--text); width: 100%; }
+  .form-group input:focus { outline: none; border-color: var(--green-accent); background: white; }
+  textarea { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 12px; font-family: monospace; background: var(--bg); color: var(--text); width: 100%; height: 140px; resize: none; }
+  textarea:focus { outline: none; border-color: var(--green-accent); background: white; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; min-height: 44px; }
+  .btn-primary { background: var(--green); color: white; width: 100%; }
+  .btn-primary:active { background: var(--green-mid); transform: scale(0.98); }
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:active { background: var(--bg); }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+
+  /* Tables */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 6px 8px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.4px; }
+  .tbl td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .b-gold { background: #fff3cd; color: #856404; }
+  .b-silver { background: #f0f0f0; color: #555; }
+  .b-bronze { background: #fde8d8; color: #8b4000; }
+  .b-blue { background: #e3f2fd; color: #1565c0; }
+  .b-green { background: var(--green-light); color: var(--green); }
+
+  /* Hole grid */
+  .hole-section-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 12px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .hole-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
+  .hole-cell { background: var(--bg); border-radius: 6px; padding: 6px 2px; text-align: center; border: 1px solid var(--border); }
+  .hole-cell.won { background: var(--green-light); border-color: var(--green-accent); }
+  .hole-num { font-size: 10px; color: var(--text-muted); display: block; }
+  .hole-winner { font-size: 9px; font-weight: 600; color: var(--green); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; }
+  .hole-score { font-size: 9px; color: var(--green-mid); display: block; }
+  .hole-empty { font-size: 9px; color: var(--border); display: block; }
+
+  /* Alerts */
+  .alert { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 12px; }
+  .alert-info { background: #e8f4fd; color: #1565c0; border: 1px solid #bbdefb; }
+  .alert-warn { background: #fff8e1; color: #856404; border: 1px solid #ffe082; }
+  .alert-ok { background: var(--green-light); color: var(--green); border: 1px solid var(--green-accent); }
+
+  /* Net positive/negative */
+  .pos { color: #2e7d32; font-weight: 700; }
+  .neg { color: var(--red); font-weight: 700; }
+
+  /* Saved indicator */
+  .saved-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--green); background: var(--green-light); padding: 4px 10px; border-radius: 20px; }
+
+  /* Install instructions */
+  .install-steps { list-style: none; counter-reset: steps; }
+  .install-steps li { counter-increment: steps; display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; }
+  .install-steps li:last-child { border-bottom: none; }
+  .install-steps li::before { content: counter(steps); min-width: 26px; height: 26px; background: var(--green); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .kbd { display: inline-block; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">⛳</div>
+        <div>
+          <div class="logo-text">Roxy Golf Bets</div>
+          <div class="logo-sub">Instant payouts from Squabbit</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <a class="standings-link" href="standings.html">Standings</a>
+        <a class="standings-link" href="results.html">Results</a>
+        <a class="standings-link" href="scorecard.html">Scores</a>
+        <div id="save-indicator" style="display:none">
+          <span class="saved-tag">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('settings')">
+        <span class="tab-icon">⚙️</span>Settings
+      </button>
+      <button class="tab" onclick="showTab('import')">
+        <span class="tab-icon">📋</span>Import
+      </button>
+      <button class="tab" onclick="showTab('results')">
+        <span class="tab-icon">💰</span>Results
+      </button>
+      <button class="tab" onclick="showTab('skins')">
+        <span class="tab-icon">🏌️</span>Skins
+      </button>
+      <button class="tab" onclick="showTab('teams')">
+        <span class="tab-icon">🏌️</span>Teams
+      </button>
+      <button class="tab" onclick="showTab('scorecard')">
+        <span class="tab-icon">📋</span>Scorecard
+      </button>
+      <button class="tab" onclick="showTab('install')">
+        <span class="tab-icon">📱</span>Install
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- SETTINGS -->
+    <div class="panel active" id="panel-settings">
+      <div class="card">
+        <div class="card-header">Round settings</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Entry fee per golfer ($)</label>
+              <input type="number" id="s-entry" value="40" min="0" inputmode="decimal">
+            </div>
+            <div class="form-group">
+              <label>Target Best Ball %</label>
+              <input type="number" id="s-bbpct" value="70" min="1" max="99" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>BB rounding unit ($)</label>
+              <input type="number" id="s-bbround" value="10" min="1" inputmode="decimal">
+            </div>
+            <div class="form-group">
+              <label>Skins rounding unit ($)</label>
+              <input type="number" id="s-skround" value="5" min="1" inputmode="decimal">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Low Net award ($)</label>
+              <input type="number" id="s-lownet" value="20" min="0" inputmode="decimal">
+            </div>
+            <div class="form-group">
+              <label>Low Gross award ($)</label>
+              <input type="number" id="s-lowgross" value="20" min="0" inputmode="decimal">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
+        </div>
+      </div>
+      <div class="alert alert-info" style="font-size:13px">
+        Settings are saved on your device and remembered between rounds. You only need to change them if your group changes the format.
+      </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div class="panel" id="panel-import">
+      <div class="card">
+        <div class="card-header">Paste CSV export</div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Open your scoring app CSV in any text editor, select all, copy, then paste below.</p>
+          <textarea id="csv-input" placeholder="Paste CSV data here..."></textarea>
+          <div id="import-auth" style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px;margin-bottom:12px">
+            <div style="font-size:12px;color:#856404;font-weight:500;margin-bottom:8px">Enter password to import</div>
+            <div style="display:flex;gap:8px">
+              <input type="password" id="import-pw" placeholder="Password" 
+                style="flex:1;padding:8px 10px;border:1px solid #e0e0d8;border-radius:6px;font-size:14px"
+                onkeydown="if(event.key==='Enter')doImport()">
+              <button class="btn btn-primary" onclick="doImport()" style="min-width:80px">Go</button>
+            </div>
+            <div id="import-pw-error" style="color:#c0392b;font-size:11px;margin-top:6px;display:none">Incorrect password</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" style="flex:1" onclick="requestImport()">⚡ Calculate payouts</button>
+            <button class="btn btn-secondary" onclick="clearImport()">Clear</button>
+          </div>
+          <div id="import-msg" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="panel" id="panel-results">
+      <div id="save-season-bar" style="display:none;margin-bottom:12px">
+        <div style="background:#EAF3DE;border:1px solid #C0DD97;border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1a472a">Round ready to save</div>
+            <div style="font-size:12px;color:#3B6D11;margin-top:2px">Downloads updated season.json — upload to GitHub to publish</div>
+          </div>
+          <button class="btn btn-primary" style="background:#1a472a;border-color:#1a472a;min-width:140px" onclick="saveToSeason()">Save to Season</button>
+        </div>
+      </div>
+      <div id="results-content">
+        <div class="alert alert-info">Import a CSV on the Import tab to see payouts.</div>
+      </div>
+    </div>
+
+    <!-- SKINS DETAIL -->
+    <div class="panel" id="panel-skins">
+      <div id="skins-content">
+        <div class="alert alert-info">Import a CSV on the Import tab to see skins detail.</div>
+      </div>
+    </div>
+
+    <!-- TEAMS -->
+    <div class="panel" id="panel-teams">
+      <div id="teams-content">
+        <div class="alert alert-info">Import a CSV on the Import tab to see Best Ball scorecard.</div>
+      </div>
+    </div>
+
+    <!-- SCORECARD -->
+    <div class="panel" id="panel-scorecard">
+      <div id="scorecard-content">
+        <div class="alert alert-info">Import a CSV on the Import tab to see scorecards.</div>
+      </div>
+    </div>
+
+    <!-- INSTALL -->
+    <div class="panel" id="panel-install">
+      <div class="card">
+        <div class="card-header">Add to iPad home screen</div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Follow these steps to install this app on your iPad so it opens like a native app — no browser chrome, just the calculator.</p>
+          <ol class="install-steps">
+            <li>Open this page in <strong>Safari</strong> on your iPad (it must be Safari, not Chrome)</li>
+            <li>Tap the <strong>Share button</strong> at the top of Safari — it looks like a box with an arrow pointing up</li>
+            <li>Scroll down in the share sheet and tap <strong>"Add to Home Screen"</strong></li>
+            <li>You can rename it — <strong>"Golf Bets"</strong> works well — then tap <strong>Add</strong></li>
+            <li>The ⛳ icon now appears on your home screen. Tap it to open the app fullscreen with no browser bar.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Add to iPhone home screen</div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Same steps work on iPhone — the app layout adjusts automatically to the smaller screen.</p>
+          <p style="font-size:13px;color:var(--text-muted)">You can share the same HTML file to anyone in the group — they follow the same steps on their own device.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Sharing the file</div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">This is a single HTML file — <strong>GolfBetCalculator.html</strong>. You can:</p>
+          <ul style="font-size:13px;color:var(--text-muted);padding-left:16px;line-height:2">
+            <li>AirDrop it to anyone in the group</li>
+            <li>Share it via iMessage or email</li>
+            <li>Store it in iCloud Drive for easy access</li>
+            <li>Host it on a free service like GitHub Pages for a permanent URL</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var cfg = {entry:40,bbPct:70,bbRound:10,skRound:5,lowNet:20,lowGross:20};
+var lastResults = null;
+
+function loadSettings(){
+  try{
+    var s = JSON.parse(localStorage.getItem('golf_cfg')||'{}');
+    if(s.entry) cfg = s;
+  }catch(e){}
+  document.getElementById('s-entry').value = cfg.entry;
+  document.getElementById('s-bbpct').value = cfg.bbPct;
+  document.getElementById('s-bbround').value = cfg.bbRound;
+  document.getElementById('s-skround').value = cfg.skRound;
+  document.getElementById('s-lownet').value = cfg.lowNet;
+  document.getElementById('s-lowgross').value = cfg.lowGross;
+}
+
+function saveSettings(){
+  cfg = {
+    entry: +document.getElementById('s-entry').value,
+    bbPct: +document.getElementById('s-bbpct').value,
+    bbRound: +document.getElementById('s-bbround').value,
+    skRound: +document.getElementById('s-skround').value,
+    lowNet: +document.getElementById('s-lownet').value,
+    lowGross: +document.getElementById('s-lowgross').value
+  };
+  try{ localStorage.setItem('golf_cfg', JSON.stringify(cfg)); }catch(e){}
+  var ind = document.getElementById('save-indicator');
+  ind.style.display = 'block';
+  setTimeout(function(){ ind.style.display='none'; }, 2000);
+}
+
+function showTab(id){
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('panel-'+id).classList.add('active');
+  var tabs = document.querySelectorAll('.tab');
+  var ids = ['settings','import','results','skins','teams','scorecard','install'];
+  for(var i=0;i<ids.length;i++){ if(ids[i]===id){ tabs[i].classList.add('active'); break; } }
+}
+
+function clearImport(){
+  document.getElementById('csv-input').value='';
+  document.getElementById('import-msg').innerHTML='';
+  document.getElementById('teams-content').innerHTML='<div class="alert alert-info">Import a CSV on the Import tab to see Best Ball scorecard.</div>';
+  document.getElementById('scorecard-content').innerHTML='<div class="alert alert-info">Import a CSV on the Import tab to see scorecards.</div>';
+}
+
+function splitLine(line){
+  var res=[],cur='',inQ=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur);cur='';}
+    else cur+=c;
+  }
+  res.push(cur);
+  return res;
+}
+
+function parseScore(s){
+  s=(s||'').trim();
+  if(s==='E')return 0;
+  return parseInt(s.replace('+',''))||0;
+}
+
+function fmt(n){ return '$'+Math.round(n).toLocaleString(); }
+function ordinal(n){ var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+function signFmt(n){ return n>=0 ? '+$'+Math.round(n).toLocaleString() : '-$'+Math.abs(Math.round(n)).toLocaleString(); }
+
+function importCSV(){
+  var csv = document.getElementById('csv-input').value.trim();
+  if(!csv){
+    document.getElementById('import-msg').innerHTML='<div class="alert alert-warn">Please paste CSV data first.</div>';
+    return;
+  }
+  var lines = csv.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  try{
+    var d = parseAll(lines);
+    lastResults = d;
+    renderResults(d);
+    renderSkins(d);
+    var msg = 'Imported: '+d.players.length+' players, '+d.teams.length+' teams, '+d.totalSkins+' skins.';
+    if(d.blindDraw) msg += ' Blind draw: '+ordinal(d.blindDraw)+' place.';
+    document.getElementById('import-msg').innerHTML='<div class="alert alert-ok">'+msg+'</div>';
+    // Auto-switch to results
+    renderTeams(d);
+    renderScorecard(d);
+    document.getElementById('save-season-bar').style.display = 'block';
+    document.querySelectorAll('.tab')[2].click();
+  }catch(e){
+    document.getElementById('import-msg').innerHTML='<div class="alert alert-warn">Parse error: '+e.message+'</div>';
+    console.error(e);
+  }
+}
+
+function parseAll(lines){
+  var players=[],skins=[],teams=[],netScores=[],grossScores=[],holeScores={};
+  var section='',strokeCount=0,currentPlayer=null,currentTeam=null;
+
+  for(var i=0;i<lines.length;i++){
+    var raw=lines[i], ln=raw.trim();
+    var parts=splitLine(raw);
+    var c0=(parts[0]||'').trim(), c1=(parts[1]||'').trim();
+
+    if(ln==='Players'){section='players';continue;}
+    if(ln==='Skins'){section='skins';continue;}
+    if(ln==='Best Ball'){section='bb';currentTeam=null;continue;}
+    if(ln==='Strokeplay'){strokeCount++;section='s'+strokeCount;continue;}
+    if(ln===''||ln.startsWith('Round ')||ln.startsWith('Stone Harbor')||ln.startsWith('Par,')||ln.startsWith('S.I.')){
+      continue;
+    }
+
+    if(section==='players'&&c0&&c0!=='Name'){
+      players.push({name:c0,hdcp:c1});
+    }
+    else if(section==='skins'&&c0&&c0!=='Player'&&parts.length>=3){
+      var cnt=parseInt((parts[2]||'').trim())||0;
+      skins.push({name:c0,count:cnt});
+    }
+    else if(section==='bb'){
+      if(c0&&c0!=='Team'&&(!c1||!c1.trim())&&parts.length>=3){
+        var sc=parseScore(parts[3]||parts[2]||'0');
+        currentTeam={p1:'',p2:'',score:sc};
+        teams.push(currentTeam);
+      } else if(c1&&c1.trim()&&currentTeam){
+        if(!currentTeam.p1)currentTeam.p1=c1;
+        else if(!currentTeam.p2)currentTeam.p2=c1;
+      }
+    }
+    else if(section==='s1'&&c0&&c0!=='Player'){
+      netScores.push({name:c0,score:parseScore(parts[2]||parts[1])});
+    }
+    else if(section==='s2'&&c0&&c0!=='Player'){
+      grossScores.push({name:c0,score:parseScore(parts[2]||parts[1])});
+    }
+
+    // Scorecard
+    if(c0&&(c1==='White tee'||c1==='Gold tee'||c1==='Blue tee'||c1==='Red tee')&&parts.length>10){
+      currentPlayer=c0;
+      var gr=[];
+      for(var h=3;h<=11;h++)gr.push(parseInt(parts[h])||0);
+      for(var h=13;h<=21;h++)gr.push(parseInt(parts[h])||0);
+      holeScores[currentPlayer]={gross:gr,net:null};
+    }
+    if(!c0&&c1==='Individual net skins'&&currentPlayer&&holeScores[currentPlayer]){
+      var nt=[];
+      for(var h=3;h<=11;h++)nt.push(parseScore(parts[h]||'E'));
+      for(var h=13;h<=21;h++)nt.push(parseScore(parts[h]||'E'));
+      holeScores[currentPlayer].net=nt;
+    }
+  }
+
+  teams.sort(function(a,b){return a.score-b.score;});
+  var blindDraw=0;
+  for(var i=0;i<teams.length;i++){if(!teams[i].p2||!teams[i].p2.trim()){blindDraw=i+1;break;}}
+  var totalSkins=skins.reduce(function(t,s){return t+s.count;},0);
+  var skinWinners={};
+  skins.forEach(function(s){if(s.count>0)skinWinners[s.name]=true;});
+
+  // Hole winners
+  var holeWinners=[];
+  for(var h=0;h<18;h++){
+    var min=999,wins=[];
+    for(var p in holeScores){
+      if(holeScores[p].net){
+        var sc=holeScores[p].net[h];
+        if(sc<min){min=sc;wins=[p];}else if(sc===min)wins.push(p);
+      }
+    }
+    if(wins.length===1&&skinWinners[wins[0]]){
+      var gr=holeScores[wins[0]].gross?holeScores[wins[0]].gross[h]:'';
+      holeWinners.push({hole:h+1,player:wins[0],net:min===0?'E':(min>0?'+'+min:''+min),gross:gr});
+    }
+  }
+
+  // Payouts
+  var totalPot=players.length*cfg.entry;
+  var sideAwards=cfg.lowNet+cfg.lowGross;
+  var prizePool=totalPot-sideAwards;
+  var numPayouts=teams.length<=4?2:teams.length<=6?3:teams.length<=8?4:teams.length<=10?5:teams.length<=12?6:teams.length<=14?7:8;
+  var splits={2:[.6,.4],3:[.5,.3,.2],4:[.4,.3,.2,.1],5:[.3,.25,.2,.15,.1],6:[.25,.2,.18,.15,.12,.1],7:[.22,.18,.16,.14,.12,.1,.08],8:[.2,.16,.14,.13,.12,.1,.08,.07]};
+  var pcts=splits[numPayouts]||splits[4];
+
+  // Optimize BB/Skins split - minimize TOTAL remainder (actual payout remainder + skins)
+  var bbPct=cfg.bbPct/100, skPct=1-bbPct;
+  var bestBB=0,bestSK=0,bestRem=1e9;
+  for(var step=0;step*cfg.skRound<=prizePool;step++){
+    var sk=step*cfg.skRound, bb=prizePool-sk;
+    if(bb<0)break;
+    // Enforce minimum BB% of 40% to prevent optimizer collapsing to 0% BB
+    if(bb < prizePool*0.40) break;
+    // Compute actual BB remainder after paying all places
+    var bbPaid=0;
+    for(var pi=0;pi<pcts.length;pi++) bbPaid+=Math.floor(bb*pcts[pi]/cfg.bbRound)*cfg.bbRound;
+    var bbRem=bb-bbPaid;
+    var perSkin=totalSkins>0?Math.floor(Math.floor(sk/cfg.skRound)/totalSkins)*cfg.skRound:0;
+    var skRem=totalSkins>0?sk-perSkin*totalSkins:0;
+    var totalRem=bbRem+skRem;
+    var dist=Math.abs(bb/prizePool-bbPct);
+    if(totalRem<bestRem||(totalRem===bestRem&&dist<Math.abs(bestBB/prizePool-bbPct))){
+      bestRem=totalRem;bestBB=bb;bestSK=sk;
+    }
+  }
+
+  // Blind draw adjustment
+  var bdAmt=0;
+  if(blindDraw>0&&blindDraw<=numPayouts){
+    var teamPay=Math.floor(bestBB*pcts[blindDraw-1]/cfg.bbRound)*cfg.bbRound;
+    bdAmt=teamPay/2;
+    bestSK+=bdAmt;
+  }
+
+  var perSkin=totalSkins>0?Math.floor(bestSK/totalSkins/cfg.skRound)*cfg.skRound:0;
+  var skRem=bestSK-perSkin*totalSkins;
+  // Recompute actual BB payout remainder after blind draw adjustment
+  var actualBBPaid=0;
+  for(var pi=0;pi<pcts.length;pi++) actualBBPaid+=Math.floor(bestBB*pcts[pi]/cfg.bbRound)*cfg.bbRound;
+  var actualBBRem=bestBB-actualBBPaid;
+  var serverRem=actualBBRem+skRem;
+
+  // BB payouts
+  var bbPayouts=[];
+  for(var i=0;i<Math.min(numPayouts,teams.length);i++){
+    var tPay=Math.floor(bestBB*pcts[i]/cfg.bbRound)*cfg.bbRound;
+    var pPay=tPay/2;
+    bbPayouts.push({place:i+1,p1:teams[i].p1,p2:teams[i].p2,score:teams[i].score,team:tPay,perPlayer:pPay,isBlind:blindDraw===i+1});
+  }
+
+  // Side award winners
+  var paidBB=new Set();
+  bbPayouts.forEach(function(b){paidBB.add(b.p1);if(b.p2)paidBB.add(b.p2);});
+  var lnWinner=null,lgWinner=null;
+  for(var i=0;i<netScores.length;i++){if(!paidBB.has(netScores[i].name)){lnWinner=netScores[i];break;}}
+  for(var i=0;i<grossScores.length;i++){
+    if(!paidBB.has(grossScores[i].name)&&(!lnWinner||grossScores[i].name!==lnWinner.name)){lgWinner=grossScores[i];break;}
+  }
+
+  // Player totals
+  var playerTotals={};
+  players.forEach(function(p){playerTotals[p.name]={bb:0,skins:0,side:0};});
+  bbPayouts.forEach(function(b){
+    if(playerTotals[b.p1])playerTotals[b.p1].bb=b.perPlayer;
+    if(b.p2&&!b.isBlind&&playerTotals[b.p2])playerTotals[b.p2].bb=b.perPlayer;
+  });
+  skins.forEach(function(s){if(playerTotals[s.name])playerTotals[s.name].skins=s.count*perSkin;});
+  if(lnWinner&&playerTotals[lnWinner.name])playerTotals[lnWinner.name].side+=cfg.lowNet;
+  if(lgWinner&&playerTotals[lgWinner.name])playerTotals[lgWinner.name].side+=cfg.lowGross;
+
+  return {players,skins,teams,netScores,grossScores,holeWinners,_lines:lines,
+    totalPot,prizePool,bbPot:bestBB,skPot:bestSK,perSkin,serverRem,
+    numPayouts,bbPayouts,lnWinner,lgWinner,playerTotals,
+    totalSkins,blindDraw,bdAmt,cfg:Object.assign({},cfg)};
+}
+
+function renderResults(d){
+  var h='';
+
+  // Metrics
+  var actualBBPct=Math.round(d.bbPot/d.prizePool*100);
+  var targetBBPct=d.cfg.bbPct;
+  var splitMatch=actualBBPct===targetBBPct;
+  h+='<div class="metrics">';
+  h+='<div class="metric"><div class="metric-val">'+d.players.length+'</div><div class="metric-lbl">golfers</div></div>';
+  h+='<div class="metric"><div class="metric-val">'+fmt(d.totalPot)+'</div><div class="metric-lbl">total pot</div></div>';
+  h+='<div class="metric"><div class="metric-val">'+fmt(d.serverRem)+'</div><div class="metric-lbl">server tip</div></div>';
+  h+='</div>';
+  h+='<div class="alert '+(splitMatch?'alert-ok':'alert-warn')+'" style="font-size:13px">';
+  h+='BB/Skins split: <strong>'+actualBBPct+'% / '+(100-actualBBPct)+'%</strong> (target '+targetBBPct+'% / '+(100-targetBBPct)+'%) — ';
+  h+=fmt(d.bbPot)+' BB, '+fmt(d.skPot)+' skins';
+  if(!splitMatch) h+=' &nbsp;|&nbsp; Closest clean split with current rounding units';
+  h+='</div>';
+
+  if(d.blindDraw){
+    h+='<div class="alert alert-warn"><strong>'+d.teams[d.blindDraw-1].p1+'</strong> played with a blind draw partner and finished '+ordinal(d.blindDraw)+' place. '+fmt(d.bdAmt)+' added to skins pot.</div>';
+  }
+
+  // BB
+  var badgeCls=['b-gold','b-silver','b-bronze','b-blue','b-blue','b-blue','b-blue','b-blue'];
+  h+='<div class="card"><div class="card-header">Best Ball — '+d.numPayouts+' places paid</div><div class="card-body" style="padding:0">';
+  h+='<table class="tbl"><tr><th></th><th>Team</th><th>Score</th><th>Each</th></tr>';
+  d.bbPayouts.forEach(function(b,i){
+    var nm=b.p1+(b.isBlind?' &amp; blind draw partner':b.p2?' &amp; '+b.p2:'');
+    h+='<tr><td><span class="badge '+badgeCls[i]+'">'+ordinal(b.place)+'</span></td>';
+    h+='<td style="font-size:13px">'+nm+'</td>';
+    h+='<td style="font-family:monospace;font-size:13px">'+(b.score>0?'+':'')+b.score+'</td>';
+    h+='<td style="font-weight:700">'+fmt(b.perPlayer)+'</td></tr>';
+  });
+  h+='</table></div></div>';
+
+  // Skins summary
+  var skWinners=d.skins.filter(function(s){return s.count>0;});
+  h+='<div class="card"><div class="card-header">Skins — '+fmt(d.perSkin)+' each ('+d.totalSkins+' total)</div><div class="card-body" style="padding:0">';
+  h+='<table class="tbl"><tr><th>Player</th><th>Skins</th><th>Payout</th></tr>';
+  skWinners.forEach(function(s){
+    h+='<tr><td>'+s.name+'</td><td>'+s.count+'</td><td style="font-weight:700">'+fmt(s.count*d.perSkin)+'</td></tr>';
+  });
+  h+='</table></div></div>';
+
+  // Side awards
+  h+='<div class="card"><div class="card-header">Side awards</div><div class="card-body" style="padding:0">';
+  h+='<table class="tbl"><tr><th>Award</th><th>Winner</th><th>Score</th><th>Payout</th></tr>';
+  if(d.lnWinner)h+='<tr><td><span class="badge b-green">Low Net</span></td><td>'+d.lnWinner.name+'</td><td style="font-family:monospace">'+(d.lnWinner.score>0?'+':'')+d.lnWinner.score+'</td><td style="font-weight:700">'+fmt(d.cfg.lowNet)+'</td></tr>';
+  if(d.lgWinner)h+='<tr><td><span class="badge b-blue">Low Gross</span></td><td>'+d.lgWinner.name+'</td><td style="font-family:monospace">'+(d.lgWinner.score>0?'+':'')+d.lgWinner.score+'</td><td style="font-weight:700">'+fmt(d.cfg.lowGross)+'</td></tr>';
+  h+='</table></div></div>';
+
+  // Payout summary
+  var sorted=Object.keys(d.playerTotals).sort(function(a,b){
+    var ta=d.playerTotals[a].bb+d.playerTotals[a].skins+d.playerTotals[a].side;
+    var tb=d.playerTotals[b].bb+d.playerTotals[b].skins+d.playerTotals[b].side;
+    return tb-ta;
+  });
+  h+='<div class="card"><div class="card-header">Payout summary</div><div class="card-body" style="padding:0">';
+  h+='<table class="tbl"><tr><th>Player</th><th>BB</th><th>Skins</th><th>Side</th><th>Collects</th><th>Net</th></tr>';
+  sorted.forEach(function(name){
+    var p=d.playerTotals[name];
+    var total=p.bb+p.skins+p.side;
+    var net=total-d.cfg.entry;
+    h+='<tr>';
+    h+='<td style="font-weight:600;font-size:13px">'+name+'</td>';
+    h+='<td style="font-size:13px">'+(p.bb?fmt(p.bb):'-')+'</td>';
+    h+='<td style="font-size:13px">'+(p.skins?fmt(p.skins):'-')+'</td>';
+    h+='<td style="font-size:13px">'+(p.side?fmt(p.side):'-')+'</td>';
+    h+='<td style="font-weight:700">'+fmt(total)+'</td>';
+    h+='<td class="'+(net>=0?'pos':'neg')+'">'+signFmt(net)+'</td>';
+    h+='</tr>';
+  });
+  h+='</table></div></div>';
+
+  document.getElementById('results-content').innerHTML=h;
+}
+
+function renderSkins(d){
+  var h='';
+  h+='<div class="card"><div class="card-header">Skins by hole — '+fmt(d.perSkin)+' per skin</div><div class="card-body">';
+
+  h+='<div class="hole-section-label">Front 9</div>';
+  h+='<div class="hole-grid">';
+  for(var n=1;n<=9;n++){
+    var hw=d.holeWinners.find(function(w){return w.hole===n;});
+    h+='<div class="hole-cell'+(hw?' won':'')+'"><span class="hole-num">'+n+'</span>';
+    if(hw){
+      h+='<span class="hole-winner">'+hw.player.split(' ').pop()+'</span>';
+      h+='<span class="hole-score">'+hw.net+'</span>';
+    }else{
+      h+='<span class="hole-empty">—</span>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+
+  h+='<div class="hole-section-label">Back 9</div>';
+  h+='<div class="hole-grid">';
+  for(var n=10;n<=18;n++){
+    var hw=d.holeWinners.find(function(w){return w.hole===n;});
+    h+='<div class="hole-cell'+(hw?' won':'')+'"><span class="hole-num">'+n+'</span>';
+    if(hw){
+      h+='<span class="hole-winner">'+hw.player.split(' ').pop()+'</span>';
+      h+='<span class="hole-score">'+hw.net+'</span>';
+    }else{
+      h+='<span class="hole-empty">—</span>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+
+  // Detail table
+  h+='<div style="margin-top:16px">';
+  if(d.holeWinners.length===0){
+    h+='<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px">Scorecard section not found in CSV.</p>';
+  } else {
+    h+='<table class="tbl"><tr><th>Hole</th><th>Winner</th><th>Net</th><th>Gross</th><th>Payout</th></tr>';
+    d.holeWinners.forEach(function(hw){
+      h+='<tr><td style="font-weight:700">'+hw.hole+'</td>';
+      h+='<td style="font-size:13px">'+hw.player+'</td>';
+      h+='<td style="font-family:monospace">'+hw.net+'</td>';
+      h+='<td>'+hw.gross+'</td>';
+      h+='<td style="font-weight:700">'+fmt(d.perSkin)+'</td></tr>';
+    });
+    h+='</table>';
+  }
+  h+='</div></div></div>';
+
+  document.getElementById('skins-content').innerHTML=h;
+}
+
+loadSettings();
+</script>
+<script>
+var CALC_PW = 'roxy2026';
+var _importAuthed = false;
+
+function requestImport() {
+  // Check if already authed this session
+  try { if(sessionStorage.getItem('golf_auth')==='1') _importAuthed=true; } catch(e){}
+  if (_importAuthed) {
+    importCSV();
+  } else {
+    document.getElementById('import-auth').style.display = 'block';
+    setTimeout(function(){ document.getElementById('import-pw').focus(); }, 50);
+  }
+}
+
+function doImport() {
+  var pw = document.getElementById('import-pw').value;
+  if (pw === CALC_PW) {
+    _importAuthed = true;
+    try { sessionStorage.setItem('golf_auth','1'); } catch(e){}
+    document.getElementById('import-auth').style.display = 'none';
+    document.getElementById('import-pw').value = '';
+    document.getElementById('import-pw-error').style.display = 'none';
+    importCSV();
+  } else {
+    document.getElementById('import-pw-error').style.display = 'block';
+    document.getElementById('import-pw').value = '';
+    document.getElementById('import-pw').focus();
+  }
+}
+</script>
+</body>
+</html>
+<script>
+function parseBestBallHoles(lines) {
+  var playerBB = {};
+  var currentPlayer = null;
+  for (var i = 0; i < lines.length; i++) {
+    var raw = lines[i], parts = splitLine(raw);
+    var c0=(parts[0]||'').trim(), c1=(parts[1]||'').trim();
+    if (c0 && (c1==='White tee'||c1==='Gold tee'||c1==='Blue tee'||c1==='Red tee') && parts.length>10) {
+      currentPlayer = c0;
+    }
+    if (!c0 && c1==='Best Ball' && currentPlayer && parts.length>10) {
+      var holes = [];
+      for (var h=3; h<=11; h++) holes.push(parseScore(parts[h]||'E'));
+      for (var h=13; h<=21; h++) holes.push(parseScore(parts[h]||'E'));
+      if (holes.length === 18) playerBB[currentPlayer] = holes;
+    }
+  }
+  return playerBB;
+}
+
+function renderTeams(d) {
+  var playerBB = parseBestBallHoles(d._lines || []);
+  var h = '';
+  var cellCls = function(s) {
+    if (s<=-2) return 'background:#C0DD97;color:#173404;font-weight:700;border-radius:3px';
+    if (s===-1) return 'background:#EAF3DE;color:#27500A;font-weight:500;border-radius:3px';
+    if (s===0)  return 'color:var(--color-text-secondary)';
+    if (s===1)  return 'color:#A32D2D';
+    return 'color:#A32D2D;font-weight:500';
+  };
+  var cellTxt = function(s){ return s===0?'E':(s>0?'+'+s:''+s); };
+  var scoreFmt = function(s){ return s===0?'E':(s>0?'+'+s:''+s); };
+  var scoreStyle = function(s){ return s<0?'color:#27500A;font-weight:500':s>0?'color:#A32D2D':'color:var(--color-text-secondary)'; };
+  var placeLbls = ['1st','2nd','3rd','4th','5th','6th','7th','8th'];
+  var placeBg = ['#FAEEDA','#F1EFE8','#FAECE7','#DDEBF7','#DDEBF7','#DDEBF7','#DDEBF7','#DDEBF7'];
+  var placeColor = ['#633806','#444441','#712B13','#1a3a5c','#1a3a5c','#1a3a5c','#1a3a5c','#1a3a5c'];
+
+  h += '<div class="card" style="padding:0;overflow-x:auto">';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;min-width:600px">';
+
+  // Header rows
+  h += '<thead>';
+  h += '<tr style="background:var(--color-background-secondary)">';
+  h += '<th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:500;color:var(--color-text-secondary);width:110px;border-bottom:0.5px solid var(--color-border-tertiary)">Team</th>';
+  var holeLbls = [1,2,3,4,5,6,7,8,9,'Out',10,11,12,13,14,15,16,17,18,'In','Tot'];
+  holeLbls.forEach(function(l){
+    var isSub = (l==='Out'||l==='In'||l==='Tot');
+    h += '<th style="text-align:center;padding:5px 2px;font-size:10px;font-weight:500;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);'+(isSub?'background:var(--color-background-tertiary,#eee)':'')+'">' + l + '</th>';
+  });
+  h += '</tr>';
+  var pars = [4,4,5,3,5,4,3,4,4,36,4,5,3,4,4,4,5,3,4,36,72];
+  h += '<tr style="background:var(--color-background-secondary)">';
+  h += '<th style="text-align:left;padding:4px 8px;font-size:10px;color:var(--color-text-secondary);font-weight:400;border-bottom:1px solid var(--color-border-tertiary)">Par</th>';
+  pars.forEach(function(p,i){
+    var isSub=(i===9||i===19||i===20);
+    h += '<td style="text-align:center;padding:4px 2px;font-size:10px;color:var(--color-text-secondary);border-bottom:1px solid var(--color-border-tertiary);'+(isSub?'background:var(--color-background-tertiary,#eee);font-weight:500':'')+'">' + p + '</td>';
+  });
+  h += '</tr>';
+  h += '</thead><tbody>';
+
+  // Team rows
+  d.bbPayouts.concat(
+    d.teams.slice(d.bbPayouts.length).map(function(t,i){
+      return {p1:t.p1,p2:t.p2,score:t.score,place:d.bbPayouts.length+i+1,perPlayer:0,isBlind:false};
+    })
+  ).forEach(function(team, i) {
+    var p1holes = playerBB[team.p1];
+    var p2holes = team.p2 && !team.isBlind ? playerBB[team.p2] : null;
+    var teamHoles = [];
+    if (p1holes) {
+      for (var h2=0; h2<18; h2++) {
+        var s1 = p1holes[h2];
+        var s2 = p2holes ? p2holes[h2] : 99;
+        teamHoles.push(Math.min(s1, s2));
+      }
+    }
+    var front = teamHoles.length ? teamHoles.slice(0,9).reduce(function(a,b){return a+b;},0) : null;
+    var back  = teamHoles.length ? teamHoles.slice(9).reduce(function(a,b){return a+b;},0) : null;
+    var total = front !== null ? front + back : team.score;
+    var paid  = i < d.numPayouts;
+
+    h += '<tr style="border-bottom:0.5px solid var(--color-border-tertiary);'+(paid?'border-left:3px solid #639922':'')+'">';
+    h += '<td style="padding:8px 8px;vertical-align:middle">';
+    h += '<span style="display:inline-block;width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:500;line-height:22px;text-align:center;background:'+placeBg[i]+';color:'+placeColor[i]+';margin-right:4px">' + placeLbls[i] + '</span>';
+    h += '<span style="font-size:11px;font-weight:500;color:var(--color-text-primary);display:block">' + (team.p1||'') + '</span>';
+    if (team.p2 && !team.isBlind) h += '<span style="font-size:10px;color:var(--color-text-secondary)">' + team.p2 + '</span>';
+    if (team.isBlind) h += '<span style="font-size:10px;color:var(--color-text-secondary)">blind draw</span>';
+    h += '</td>';
+
+    if (teamHoles.length) {
+      teamHoles.forEach(function(s, idx) {
+        h += '<td style="text-align:center;padding:5px 2px;' + cellCls(s) + '">' + cellTxt(s) + '</td>';
+        if (idx === 8) h += '<td style="text-align:center;padding:5px 2px;background:var(--color-background-secondary);' + scoreStyle(front) + ';font-weight:500">' + scoreFmt(front) + '</td>';
+      });
+      h += '<td style="text-align:center;padding:5px 2px;background:var(--color-background-secondary);' + scoreStyle(back) + ';font-weight:500">' + scoreFmt(back) + '</td>';
+      h += '<td style="text-align:center;padding:5px 2px;font-weight:500;' + scoreStyle(total) + '">' + scoreFmt(total) + '</td>';
+    } else {
+      for (var x=0; x<21; x++) h += '<td style="text-align:center;color:var(--color-text-tertiary);font-size:10px">—</td>';
+    }
+    h += '</tr>';
+  });
+
+  h += '</tbody></table></div>';
+
+  // Legend
+  h += '<div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">';
+  h += '<span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#C0DD97"></span>Eagle</span>';
+  h += '<span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#EAF3DE"></span>Birdie</span>';
+  h += '<span style="font-size:11px;color:var(--color-text-secondary)">E = par &nbsp;·&nbsp; red = over par</span>';
+  h += '<span style="font-size:11px;color:var(--color-text-secondary);margin-left:auto">Net scores after handicap</span>';
+  h += '</div>';
+
+  document.getElementById('teams-content').innerHTML = h;
+}
+</script>
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwC87X466efJ4c3YYfqGj8rEEzaDfNOCg7v1h_UKe2p6Yjb9jmhlqSfoomq8Gkmll4kAQ/exec';
+var SEASON = '2026';
+
+function saveToSeason() {
+  if (!lastResults) return;
+  var d = lastResults;
+
+  var btn = document.querySelector('[onclick="saveToSeason()"]');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+
+  var today = new Date();
+  var dateStr = today.toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'});
+
+  // Build scorecard data
+  var parsed2 = parseGrossScores(d._lines || []);
+  var playerBB2 = parseBestBallHoles(d._lines || []);
+  var scTeams = [];
+  var allTeams2 = d.bbPayouts.slice();
+  d.teams.slice(d.bbPayouts.length).forEach(function(t,i){
+    allTeams2.push({p1:t.p1,p2:t.p2,score:t.score,place:d.bbPayouts.length+i+1,perPlayer:0,isBlind:false});
+  });
+  allTeams2.forEach(function(team,ti){
+    var p1bb = playerBB2[team.p1]||[];
+    var p2bb = team.p2&&!team.isBlind?(playerBB2[team.p2]||[]):[];
+    var bbHoles = p1bb.length===18?p1bb.map(function(s,i){return p2bb.length?Math.min(s,p2bb[i]):s;}):[]; 
+    var players2=[];
+    [team.p1,team.isBlind?null:team.p2].forEach(function(name){
+      if(!name)return;
+      var gr=parsed2.scores[name];
+      var ph=parsed2.hdcps[name]||0;
+      if(gr)players2.push({name:name,hdcp:ph,gross:gr});
+    });
+    scTeams.push({
+      name:(team.p1||'')+(team.p2&&!team.isBlind?' / '+team.p2:''),
+      score:team.score, place:ti+1, bbHoles:bbHoles, players:players2
+    });
+  });
+
+  // Build results list
+  var results = Object.keys(d.playerTotals).map(function(name){
+    var pt = d.playerTotals[name];
+    var skinEntry = d.skins.find(function(s){return s.name===name;})||{count:0};
+    return {
+      name:name, bb:Math.round(pt.bb), skins:Math.round(pt.skins),
+      side:Math.round(pt.side), collects:Math.round(pt.bb+pt.skins+pt.side),
+      entry:d.cfg.entry, skinCount:skinEntry.count
+    };
+  }).sort(function(a,b){return b.collects-a.collects;});
+
+  // Build BB payouts for results page
+  var bbPayoutsData = d.bbPayouts.map(function(b){
+    return {p1:b.p1,p2:b.p2,score:b.score,team:b.team,perPlayer:b.perPlayer,isBlind:b.isBlind,place:b.place};
+  });
+
+  var payload = {
+    action: 'saveRound',
+    season: SEASON,
+    date: dateStr,
+    players: d.players.length,
+    teams: d.teams.length,
+    totalSkins: d.totalSkins,
+    totalPot: d.totalPot,
+    serverRem: d.serverRem,
+    numPayouts: d.numPayouts,
+    bbPayouts: bbPayoutsData,
+    bbPot: d.bbPot,
+    skPot: d.skPot,
+    prizePool: d.prizePool,
+    skinWinners: d.skins.filter(function(s){return s.count>0;}),
+    lnWinner: d.lnWinner,
+    lgWinner: d.lgWinner,
+    results: results,
+    scorecard: {
+      date: dateStr,
+      numPayouts: d.numPayouts,
+      si: parsed2.si,
+      teams: scTeams
+    }
+  };
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE') !== -1) {
+    alert('Please set your Apps Script URL in index.html first.');
+    if (btn) { btn.textContent = 'Save to Season'; btn.disabled = false; }
+    return;
+  }
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(function() {
+    document.getElementById('save-season-bar').style.display = 'none';
+    if (btn) { btn.textContent = 'Save to Season'; btn.disabled = false; }
+    alert('Round saved! Standings and scorecard are now live for the group.');
+  })
+  .catch(function(err){
+    if (btn) { btn.textContent = 'Save to Season'; btn.disabled = false; }
+    alert('Could not reach Google Sheets.' + err);
+  });
+}
+
+
+</script>
+<script>
+var SC_PAR = [4,4,5,3,5,4,3,4,4, 4,5,3,4,4,4,5,3,4];
+
+function parseGrossScores(lines) {
+  var scores = {};
+  var hdcps  = {};
+  var siRow  = [];
+  var current = null;
+  var strokeSeen = {};
+  for (var i = 0; i < lines.length; i++) {
+    var parts = splitLine(lines[i]);
+    var c0 = (parts[0]||'').trim(), c1 = (parts[1]||'').trim();
+    // S.I. row
+    if (c0 === 'S.I.' && parts.length > 10 && siRow.length === 0) {
+      for (var h=3; h<=11; h++) siRow.push(parseInt(parts[h])||0);
+      for (var h=13; h<=21; h++) siRow.push(parseInt(parts[h])||0);
+    }
+    if (c0 && (c1==='White tee'||c1==='Gold tee'||c1==='Blue tee'||c1==='Red tee') && parts.length > 10) {
+      current = c0;
+      var gr = [];
+      for (var h=3; h<=11; h++) gr.push(parseInt(parts[h])||0);
+      for (var h=13; h<=21; h++) gr.push(parseInt(parts[h])||0);
+      if (gr.length === 18) scores[current] = gr;
+      strokeSeen[current] = 0;
+    }
+    // First Stroke row = course handicap
+    if (!c0 && c1 === 'Stroke' && current && parts.length > 2) {
+      strokeSeen[current] = (strokeSeen[current]||0) + 1;
+      if (strokeSeen[current] === 1) {
+        var hdcpVal = parseFloat((parts[2]||'0').replace('+',''));
+        hdcps[current] = isNaN(hdcpVal) ? 0 : ((parts[2]||'').indexOf('+')===0 ? hdcpVal : hdcpVal);
+      }
+    }
+  }
+  return {scores: scores, hdcps: hdcps, si: siRow};
+}
+
+function renderScorecard(d) {
+  var lines = d._lines || [];
+  var parsed = parseGrossScores(lines);
+  var grossScores = parsed.scores;
+  var hdcps = parsed.hdcps;
+  var siArr = parsed.si;
+  var playerBB = parseBestBallHoles(lines);
+
+  var PLACE_LABELS = ['1st','2nd','3rd','4th','5th','6th','7th','8th'];
+  var PLACE_BG = ['#FAEEDA','#F1EFE8','#FAECE7','#e8e8e8','#e8e8e8','#e8e8e8','#e8e8e8','#e8e8e8'];
+  var PLACE_COLOR = ['#633806','#444441','#712B13','#555','#555','#555','#555','#555'];
+
+  function scCls(gross, holeIdx) {
+    var par = SC_PAR[holeIdx], diff = gross - par;
+    if (diff <= -2) return 'background:#C0DD97;color:#173404;font-weight:700;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px';
+    if (diff === -1) return 'background:#EAF3DE;color:#27500A;font-weight:600;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px';
+    if (diff === 1)  return 'color:#A32D2D';
+    if (diff >= 2)   return 'color:#A32D2D;font-weight:700';
+    return 'color:var(--color-text-secondary)';
+  }
+
+  function fmtScore(gross, holeIdx) {
+    return '<span style="' + scCls(gross, holeIdx) + '">' + gross + '</span>';
+  }
+  function cellScore(gross, holeIdx, hdcp) {
+    var base = fmtScore(gross, holeIdx);
+    var dots = '';
+    if (siArr.length) {
+      var si = siArr[holeIdx];
+      if (hdcp >= si + 18) {
+        dots = '<span style="color:#1a472a;font-size:8px;vertical-align:super;margin-left:1px">&#9679;&#9679;</span>';
+      } else if (hdcp >= si) {
+        dots = '<span style="color:#1a472a;font-size:8px;vertical-align:super;margin-left:1px">&#9679;</span>';
+      }
+    }
+    return base + dots;
+  }
+
+  function fmtDiff(diff) {
+    var str = diff === 0 ? 'E' : (diff > 0 ? '+'+diff : ''+diff);
+    var col = diff > 0 ? '#A32D2D' : diff < 0 ? '#27500A' : 'var(--color-text-secondary)';
+    return '<span style="font-size:10px;color:'+col+'"> ('+str+')</span>';
+  }
+
+  var FRONT_PAR = 36, BACK_PAR = 36;
+  var hdrCols = [1,2,3,4,5,6,7,8,9,'Out',10,11,12,13,14,15,16,17,18,'In','Tot'];
+
+  var h = '';
+
+  // Build teams list from bbPayouts + remaining teams
+  var allTeams = d.bbPayouts.slice();
+  d.teams.slice(d.bbPayouts.length).forEach(function(t, i) {
+    allTeams.push({p1:t.p1, p2:t.p2, score:t.score, place:d.bbPayouts.length+i+1, perPlayer:0, isBlind:false});
+  });
+
+  allTeams.forEach(function(team, ti) {
+    var p1holes = playerBB[team.p1] || [];
+    var p2holes = team.p2 && !team.isBlind ? (playerBB[team.p2] || []) : [];
+    var bbNet = p1holes.length === 18 ? p1holes.map(function(s,i){ return p2holes.length ? Math.min(s, p2holes[i]) : s; }) : [];
+
+    var paid = ti < d.numPayouts;
+    var scoreStr = team.score === 0 ? 'E' : (team.score > 0 ? '+'+team.score : ''+team.score);
+    var teamName = (team.p1||'') + (team.p2 && !team.isBlind ? ' / '+team.p2 : team.isBlind ? ' (blind draw)' : '');
+
+    h += '<div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:12px;overflow:hidden">';
+
+    // Team header
+    h += '<div style="background:#1a472a;color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">';
+    h += '<div style="display:flex;align-items:center;gap:8px">';
+    h += '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:700;background:'+PLACE_BG[ti]+';color:'+PLACE_COLOR[ti]+'">'+PLACE_LABELS[ti]+'</span>';
+    h += '<span style="font-size:14px;font-weight:700">'+teamName+'</span>';
+    if (paid) h += '<span style="font-size:10px;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px">Paid</span>';
+    h += '</div>';
+    h += '<span style="font-size:12px;opacity:0.85">Best Ball: '+scoreStr+'</span>';
+    h += '</div>';
+
+    // Table
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+
+    // Header
+    h += '<thead><tr><th style="text-align:left;padding:5px 8px;font-size:10px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);min-width:100px">Player</th>';
+    hdrCols.forEach(function(n){
+      var isSub = n==='Out'||n==='In'||n==='Tot';
+      h += '<th style="text-align:center;padding:5px 3px;font-size:10px;color:var(--color-text-secondary);'+(isSub?'background:#e8e8e0;':'background:var(--color-background-secondary);')+'border-bottom:0.5px solid var(--color-border-tertiary)">'+n+'</th>';
+    });
+    h += '</tr>';
+
+    // Par row
+    var pars = SC_PAR.slice(0,9).concat([36]).concat(SC_PAR.slice(9)).concat([36,72]);
+    h += '<tr><td style="text-align:left;padding:5px 8px;font-size:10px;color:var(--color-text-secondary);font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary)">Par</td>';
+    pars.forEach(function(p,i){
+      var isSub = i===9||i===19||i===20;
+      h += '<td style="text-align:center;padding:5px 3px;font-size:10px;color:var(--color-text-secondary);'+(isSub?'background:#e8e8e0;':'')+'border-bottom:0.5px solid var(--color-border-tertiary)">'+p+'</td>';
+    });
+    h += '</tr></thead><tbody>';
+
+    // Player rows
+    [team.p1, team.isBlind ? null : team.p2].forEach(function(name) {
+      if (!name) return;
+      var gr = grossScores[name];
+      if (!gr || gr.length !== 18) return;
+      var front = gr.slice(0,9).reduce(function(a,b){return a+b;},0);
+      var back  = gr.slice(9).reduce(function(a,b){return a+b;},0);
+      var total = front + back;
+
+      var ph = hdcps[name] || 0;
+      var phStr = ph > 0 ? '+'+ph : ''+ph;
+      h += '<tr><td style="text-align:left;padding:7px 8px;font-weight:600;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)">'+name+' <span style="font-size:10px;color:var(--color-text-secondary);font-weight:400">('+phStr+')</span></td>';
+      gr.slice(0,9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;border-bottom:0.5px solid var(--color-border-tertiary)">'+cellScore(s,i,ph)+'</td>'; });
+      h += '<td style="text-align:center;padding:5px 3px;background:#e8e8e0;font-weight:600;border-bottom:0.5px solid var(--color-border-tertiary)">'+front+fmtDiff(front-FRONT_PAR)+'</td>';
+      gr.slice(9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;border-bottom:0.5px solid var(--color-border-tertiary)">'+cellScore(s,i+9,ph)+'</td>'; });
+      h += '<td style="text-align:center;padding:5px 3px;background:#e8e8e0;font-weight:600;border-bottom:0.5px solid var(--color-border-tertiary)">'+back+fmtDiff(back-BACK_PAR)+'</td>';
+      h += '<td style="text-align:center;padding:5px 3px;background:#e8e8e0;font-weight:700;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)">'+total+fmtDiff(total-72)+'</td>';
+      h += '</tr>';
+    });
+
+    // Best Ball gross row
+    if (bbNet.length === 18) {
+      var bbGross = bbNet.map(function(s,i){ return SC_PAR[i]+s; });
+      var bbFront = bbGross.slice(0,9).reduce(function(a,b){return a+b;},0);
+      var bbBack  = bbGross.slice(9).reduce(function(a,b){return a+b;},0);
+      var bbTotal = bbFront + bbBack;
+
+      h += '<tr style="border-top:2px solid #52b788"><td style="text-align:left;padding:7px 8px;font-size:11px;font-weight:700;color:#1a472a">Best Ball</td>';
+      bbGross.slice(0,9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;background:#e8f5e9">'+fmtScore(s,i)+'</td>'; });
+      h += '<td style="text-align:center;padding:5px 3px;background:#c8e6c9;font-weight:700">'+bbFront+fmtDiff(bbFront-FRONT_PAR)+'</td>';
+      bbGross.slice(9).forEach(function(s,i){ h += '<td style="text-align:center;padding:5px 2px;background:#e8f5e9">'+fmtScore(s,i+9)+'</td>'; });
+      h += '<td style="text-align:center;padding:5px 3px;background:#c8e6c9;font-weight:700">'+bbBack+fmtDiff(bbBack-BACK_PAR)+'</td>';
+      h += '<td style="text-align:center;padding:5px 3px;background:#c8e6c9;font-weight:700;font-size:12px">'+bbTotal+fmtDiff(bbTotal-72)+'</td>';
+      h += '</tr>';
+    }
+
+    h += '</tbody></table></div></div>';
+  });
+
+  document.getElementById('scorecard-content').innerHTML = h || '<div class="alert alert-warn">No gross score data found in CSV.</div>';
+}
+</script>
